@@ -117,4 +117,4 @@
 </div>
 
 <?php require APPROOT . '/views/includes/footer.php'; ?>
-<script src="<?php echo URLROOT; ?>/js/sidebar.js"></script>    
+  
