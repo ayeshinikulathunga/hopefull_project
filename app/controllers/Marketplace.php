@@ -568,85 +568,99 @@ public function inquiries() {
 }
    
 
-/*public function orderDetails($orderId = null) {
-    // Redirect if no order ID provided
-    if (!$orderId) {
-        redirect('marketplace/orders');
-    }
-    
-    // Make sure user is logged in by checking session
+
+// Request order cancellation
+public function requestCancellation() {
+    // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
         redirect('users/login');
     }
     
-    // Initialize the Order model
-    $orderModel = $this->model('Order');
-    
-    // Fetch the order details
-    $order = $orderModel->getOrderById($orderId);
-    
-    // If order doesn't exist or doesn't belong to the current user, redirect
-    if (!$order || $order->UserID != $_SESSION['user_id']) {
-        // You might want to set a flash message here about the order not existing
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Process form
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        
+        $data = [
+            'order_id' => trim($_POST['order_id']),
+            'user_id' => $_SESSION['user_id'],
+            'reason' => trim($_POST['reason']),
+            'reason_err' => ''
+        ];
+        
+        // Validate reason
+        if (empty($data['reason'])) {
+            $data['reason_err'] = 'Please provide a reason for cancellation';
+        }
+        
+        // Get order to validate it belongs to user and is in cancellable state
+        $order = $this->orderModel->getOrderById($data['order_id']);
+        
+        if (!$order || $order->UserID != $_SESSION['user_id']) {
+            flash('order_error', 'Invalid order or permission denied', 'alert alert-danger');
+            redirect('marketplace/orders');
+        }
+        
+        // Check if cancellation is allowed based on order status
+        if (!$this->orderModel->isCancellationAllowed($data['order_id'])) {
+            flash('order_error', 'This order cannot be cancelled in its current state', 'alert alert-danger');
+            redirect('marketplace/orderDetails/' . $data['order_id']);
+        }
+        
+        // Check if there's already a pending cancellation request
+        if ($this->orderModel->hasPendingCancellation($data['order_id'])) {
+            flash('order_message', 'A cancellation request for this order is already pending', 'alert alert-info');
+            redirect('marketplace/orderDetails/' . $data['order_id']);
+        }
+        
+        // If no errors, submit cancellation request
+        if (empty($data['reason_err'])) {
+            if ($this->orderModel->requestCancellation($data)) {
+                flash('order_message', 'Cancellation request submitted. You will be notified once it has been processed.', 'alert alert-success');
+                redirect('marketplace/orderDetails/' . $data['order_id']);
+            } else {
+                flash('order_error', 'Something went wrong. Please try again.', 'alert alert-danger');
+                redirect('marketplace/orderDetails/' . $data['order_id']);
+            }
+        } else {
+            // Load view with errors
+            $order = $this->orderModel->getOrderById($data['order_id']);
+            $orderItems = $this->orderModel->getOrderItems($data['order_id']);
+            
+            $viewData = [
+                'title' => 'Order Details',
+                'order' => $order,
+                'order_items' => $orderItems,
+                'cancellation' => $data
+            ];
+            
+            $this->view('marketplace/orderDetails', $viewData);
+        }
+    } else {
         redirect('marketplace/orders');
     }
+}
+
+// Get updated order details
+public function orderDetails($orderId = null) {
+    // Existing code from your function...
     
-    // Fetch order items with product details
-    $orderItems = $orderModel->getOrderItems($orderId);
+    // Adding cancellation request information
+    $order = $this->orderModel->getOrderById($orderId);
+    $orderItems = $this->orderModel->getOrderItems($orderId);
+    $cancellationRequest = $this->orderModel->getCancellationRequest($orderId);
     
     // Load the view with data
     $this->view('marketplace/orderDetails', [
         'title' => 'Order Details',
         'order' => $order,
-        'order_items' => $orderItems
+        'order_items' => $orderItems,
+        'cancellation_request' => $cancellationRequest,
+        'cancellation_allowed' => $this->orderModel->isCancellationAllowed($orderId)
     ]);
 }
 
-// Method to handle order cancellation
-public function cancelOrder() {
-    // Check if POST request
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-        redirect('marketplace/orders');
-    }
-    
-    // Make sure user is logged in by checking session
-    if (!isset($_SESSION['user_id'])) {
-        redirect('users/login');
-    }
-    
-    // Get the order ID from POST data
-    $orderId = $_POST['order_id'];
-    
-    // Initialize the Order model
-    $orderModel = $this->model('Order');
-    
-    // Fetch the order to verify ownership
-    $order = $orderModel->getOrderById($orderId);
-    
-    // If order doesn't exist or doesn't belong to the current user, redirect
-    if (!$order || $order->UserID != $_SESSION['user_id']) {
-        flash('order_message', 'Invalid order or permission denied', 'alert alert-danger');
-        redirect('marketplace/orders');
-    }
-    
-    // Check if order is in a cancellable state (typically only 'Pending' orders can be cancelled)
-    if ($order->Status != 'Pending') {
-        flash('order_message', 'This order cannot be cancelled in its current state', 'alert alert-danger');
-        redirect('marketplace/orderDetails/' . $orderId);
-    }
-    
-    // Attempt to cancel the order
-    if ($orderModel->cancelOrder($orderId)) {
-        flash('order_message', 'Order successfully cancelled', 'alert alert-success');
-    } else {
-        flash('order_message', 'Something went wrong, please try again', 'alert alert-danger');
-    }
-    
-    redirect('marketplace/orders');
-}*/
 
-
-public function orderDetails($orderId = null) {
+/*public function orderDetails($orderId = null) {
     // Redirect if no order ID provided
     if (!$orderId) {
         redirect('marketplace/orders');
@@ -680,7 +694,7 @@ public function orderDetails($orderId = null) {
         'order' => $order,
         'order_items' => $orderItems
     ]);
-}
+}*/
 
 
 

@@ -1349,6 +1349,110 @@
      }
  }
 
+ /* Seller Cancellation Requests Page Styles */
+.seller-cancellation-requests {
+    padding: 20px;
+  }
+  
+  .section-header {
+    margin-bottom: 25px;
+  }
+  
+  .section-header h2 {
+    display: flex;
+    align-items: center;
+    color: #343a40;
+    margin-bottom: 10px;
+  }
+  
+  .section-header h2 i {
+    margin-right: 10px;
+    color: #dc3545;
+  }
+  
+  .section-header p {
+    color: #6c757d;
+  }
+  
+  .cancellation-table {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .cancellation-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+    font-weight: 600;
+  }
+  
+  .reason-text {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .order-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .order-link:hover {
+    text-decoration: underline;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .status-pending {
+    background-color: #e2e3e5;
+    color: #383d41;
+  }
+  
+  .status-processing {
+    background-color: #cce5ff;
+    color: #004085;
+  }
+  
+  .status-shipped {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+  
+  .status-delivered {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  .status-approved {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+
 
  
 

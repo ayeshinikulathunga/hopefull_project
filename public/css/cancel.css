@@ -1,0 +1,199 @@
+/* Add these styles to your CSS files */
+
+/* Customer Order Details Cancellation Styles */
+.mp-order-details__cancellation-status {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.mp-order-details__cancellation-status h4 {
+    margin-top: 0;
+    color: #343a40;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.mp-order-details__status-info {
+    font-size: 0.95rem;
+}
+
+.mp-order-details__status-info p {
+    margin-bottom: 8px;
+}
+
+.mp-order-details__status-info .badge {
+    font-size: 0.85rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* Cancellation Modal Styles */
+.cancellation-notice {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+}
+
+.cancellation-notice p {
+    margin-bottom: 8px;
+}
+
+.cancellation-notice p:last-child {
+    margin-bottom: 0;
+}
+
+/* Seller Cancellation Requests Page Styles */
+.seller-cancellation-requests {
+    padding: 20px;
+}
+
+.section-header {
+    margin-bottom: 25px;
+}
+
+.section-header h2 {
+    display: flex;
+    align-items: center;
+    color: #343a40;
+    margin-bottom: 10px;
+}
+
+.section-header h2 i {
+    margin-right: 10px;
+    color: #dc3545;
+}
+
+.section-header p {
+    color: #6c757d;
+}
+
+.cancellation-table {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.cancellation-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+    font-weight: 600;
+}
+
+.reason-text {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.order-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.order-link:hover {
+    text-decoration: underline;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.status-processing {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-shipped {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-delivered {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Cancellation Info Card on Order Details */
+.cancellation-info-card {
+    border-left: 4px solid #dc3545;
+}
+
+.cancellation-info-card h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cancellation-info-card h3 i {
+    color: #dc3545;
+    margin-right: 10px;
+}
+
+.cancellation-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.info-row .text-warning {
+    color: #ffc107 !important;
+}
+
+.info-row .text-warning i {
+    margin-right: 5px;
+}

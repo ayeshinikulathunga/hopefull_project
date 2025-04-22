@@ -46,6 +46,19 @@
                             <span>Orders</span>
                         </a>
                     </li>
+                    <li class="nav-item <?php echo ($data['title'] == 'Cancellation Requests') ? 'active' : ''; ?>">
+                        <a href="<?php echo URLROOT; ?>/sellers/cancellationRequests">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Cancellations</span>
+                            <?php 
+                            // Show notification badge if there are pending cancellation requests
+                            if(isset($data['pending_cancellations_count']) && $data['pending_cancellations_count'] > 0): 
+                            ?>
+                            <span class="notification-badge"><?php echo $data['pending_cancellations_count']; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+
                     <li class="nav-item <?php echo ($data['title'] == 'Inventory') ? 'active' : ''; ?>">
                         <a href="<?php echo URLROOT; ?>/sellers/inventory">
                             <i class="fas fa-warehouse"></i>

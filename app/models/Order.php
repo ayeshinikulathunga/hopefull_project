@@ -8,23 +8,6 @@ class Order {
     }
 
 
-    // Check and create orders_items table if needed
-    /*private function ensureOrderItemsTableExists() {
-        try {
-            // Check if table exists
-            $this->db->query("SHOW TABLES LIKE 'orders_items'");
-            $tableExists = $this->db->rowCount() > 0;
-            
-            if (!$tableExists) {
-                // Create the table only if it doesn't exist
-                $this->db->query("CREATE TABLE `orders_items` (...)");
-                $this->db->execute();
-                error_log("Created missing orders_items table");
-            }
-        } catch (Exception $e) {
-            error_log("Error checking/creating orders_items table: " . $e->getMessage());
-        }
-    }*/
 
     private function ensureOrderItemsTableExists() {
         try {
@@ -110,21 +93,6 @@ class Order {
         }
     }
 
-    // Get order by ID
-    /* public function getOrderById($orderId) {
-        $this->db->query('SELECT o.*, 
-                        u.Username,
-                        u.Email
-                        FROM orders o
-                        JOIN users u ON o.UserID = u.UserID
-                        WHERE o.OrderID = :orderId');
-        
-        $this->db->bind(':orderId', $orderId);
-        
-        $row = $this->db->single();
-        
-        return $row;
-    }*/
 
     // Get order by ID
     public function getOrderById($orderId) {
@@ -148,18 +116,7 @@ class Order {
     }
 
     // Get order items
-    /*public function getOrderItems($orderId) {
-        $this->db->query('SELECT oi.*, p.ProductName, p.ProductImage
-                        FROM orders_items oi
-                        JOIN marketplace_inventory p ON oi.ProductID = p.ProductID
-                        WHERE oi.OrderID = :orderId');
-        
-        $this->db->bind(':orderId', $orderId);
-        
-        $results = $this->db->resultSet();
-        
-        return $results;
-    }*/
+
     public function getOrderItems($orderId) {
         try {
             // Always include the ProductImage column in the query
@@ -464,6 +421,145 @@ public function getTotalRevenue() {
     $this->db->query('SELECT SUM(TotalAmount) as total FROM orders WHERE Status != "Cancelled"');
     $row = $this->db->single();
     return $row->total ?? 0;
+}
+
+// Add these methods to your Order.php model class
+
+// Request an order cancellation
+public function requestCancellation($data) {
+    // Generate CancellationID (Format: CAN + 5 random digits)
+    $cancellationId = 'CAN' . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+    
+    try {
+        $this->db->query('INSERT INTO order_cancellations 
+                        (CancellationID, OrderID, UserID, Reason, Status) 
+                        VALUES 
+                        (:cancellationId, :orderId, :userId, :reason, "Pending")');
+        
+        $this->db->bind(':cancellationId', $cancellationId);
+        $this->db->bind(':orderId', $data['order_id']);
+        $this->db->bind(':userId', $data['user_id']);
+        $this->db->bind(':reason', $data['reason']);
+        
+        return $this->db->execute();
+    } catch (Exception $e) {
+        error_log("Order cancellation request error: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Check if an order has a pending cancellation request
+public function hasPendingCancellation($orderId) {
+    try {
+        $this->db->query('SELECT COUNT(*) as count FROM order_cancellations 
+                        WHERE OrderID = :orderId AND Status = "Pending"');
+        
+        $this->db->bind(':orderId', $orderId);
+        $row = $this->db->single();
+        
+        return $row->count > 0;
+    } catch (Exception $e) {
+        error_log("Check pending cancellation error: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Get cancellation request for an order
+public function getCancellationRequest($orderId) {
+    try {
+        $this->db->query('SELECT oc.*, u.Username
+                        FROM order_cancellations oc
+                        JOIN users u ON oc.UserID = u.UserID
+                        WHERE oc.OrderID = :orderId
+                        ORDER BY oc.RequestDate DESC
+                        LIMIT 1');
+        
+        $this->db->bind(':orderId', $orderId);
+        return $this->db->single();
+    } catch (Exception $e) {
+        error_log("Get cancellation request error: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Process a cancellation request (approve or reject)
+public function processCancellationRequest($data) {
+    try {
+        $this->db->beginTransaction();
+        
+        // Update the cancellation request
+        $this->db->query('UPDATE order_cancellations 
+                        SET Status = :status,
+                            ProcessedBy = :processedBy,
+                            ProcessedDate = CURRENT_TIMESTAMP,
+                            Notes = :notes
+                        WHERE CancellationID = :cancellationId');
+        
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':processedBy', $data['processed_by']);
+        $this->db->bind(':notes', $data['notes']);
+        $this->db->bind(':cancellationId', $data['cancellation_id']);
+        
+        $this->db->execute();
+        
+        // If approved, update the order status to Cancelled
+        if ($data['status'] === 'Approved') {
+            $this->db->query('UPDATE orders SET Status = "Cancelled" WHERE OrderID = :orderId');
+            $this->db->bind(':orderId', $data['order_id']);
+            $this->db->execute();
+            
+            // Here you could add code to handle inventory updates
+            // For example, restoring quantities for cancelled items
+        }
+        
+        $this->db->commit();
+        return true;
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        error_log("Process cancellation request error: " . $e->getMessage());
+        return false;
+    }
+}
+
+
+public function getSellerCancellationRequests($sellerId) {
+    try {
+        $this->db->query('SELECT oc.*, o.OrderID, o.Status AS OrderStatus, 
+                        u.Username AS CustomerName
+                        FROM order_cancellations oc
+                        JOIN orders o ON oc.OrderID = o.OrderID
+                        JOIN users u ON oc.UserID = u.UserID
+                        JOIN orders_items oi ON o.OrderID = oi.OrderID
+                        JOIN marketplace_inventory p ON oi.ProductID = p.ProductID
+                        WHERE p.SellerID = :sellerId AND oc.Status = "Pending"
+                        GROUP BY oc.CancellationID
+                        ORDER BY oc.RequestDate DESC');
+        
+        $this->db->bind(':sellerId', $sellerId);
+        return $this->db->resultSet();
+    } catch (Exception $e) {
+        error_log("Get seller cancellation requests error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Check if cancellation is allowed based on order status
+public function isCancellationAllowed($orderId) {
+    try {
+        $this->db->query('SELECT Status FROM orders WHERE OrderID = :orderId');
+        $this->db->bind(':orderId', $orderId);
+        $order = $this->db->single();
+        
+        if (!$order) {
+            return false;
+        }
+        
+        // Orders can only be cancelled if they are Pending or Processing
+        return in_array($order->Status, ['Pending', 'Processing']);
+    } catch (Exception $e) {
+        error_log("Check cancellation allowed error: " . $e->getMessage());
+        return false;
+    }
 }
 
 
