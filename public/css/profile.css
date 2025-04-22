@@ -1,0 +1,202 @@
+/* Print Styles for Shipping Label */
+@media print {
+  /* Hide navigation elements and other UI components */
+  .admin-sidebar,
+  .admin-header,
+  .delivery-header,
+  .order-header .back-link,
+  .order-header .order-actions,
+  .filters,
+  .delivery-cards-container:not(.print-content),
+  .main-footer,
+  .modal,
+  button:not(.print-visible) {
+      display: none !important;
+  }
+  
+  /* Reset margins and padding for print */
+  body {
+      margin: 0;
+      padding: 0;
+      background: white;
+  }
+  
+  .admin-content {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+  }
+  
+  /* Order details print styles */
+  .order-info-grid,
+  .order-items-card {
+      break-inside: avoid;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+      box-shadow: none !important;
+  }
+  
+  .info-card {
+      box-shadow: none !important;
+      border: 1px solid #ddd !important;
+  }
+  
+  /* Table styles for printing */
+  .table th,
+  .table td {
+      padding: 8px !important;
+  }
+  
+  .item-image {
+      max-width: 40px !important;
+      max-height: 40px !important;
+  }
+  
+  /* Shipping label specific print styles */
+  .shipping-label {
+      display: block !important;
+      visibility: visible !important;
+      position: relative;
+      width: 100%;
+      margin: 0 auto;
+      page-break-before: always; /* Force shipping label to start on a new page */
+  }
+  
+  .shipping-label__header,
+  .shipping-label__info,
+  .shipping-label__order-info,
+  .shipping-label__footer {
+      visibility: visible !important;
+  }
+  
+  /* Hide elements that should not be printed */
+  .no-print {
+      display: none !important;
+  }
+  
+  /* Ensure print-only content is visible */
+  .print-only, 
+  .print-only * {
+      visibility: visible !important;
+  }
+}
+
+/* Shipping Label Styles */
+.shipping-label {
+  display: none;
+  font-family: 'Arial', sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+  border: 1px solid #000;
+}
+
+.shipping-label__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #000;
+}
+
+.shipping-label__logo img {
+  max-height: 80px;
+  max-width: 200px;
+}
+
+.shipping-label__title h1 {
+  font-size: 24px;
+  margin: 0 0 5px 0;
+}
+
+.shipping-label__title p {
+  font-size: 16px;
+  margin: 0;
+  color: #5a5a5a;
+}
+
+.shipping-label__info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.shipping-label__sender,
+.shipping-label__recipient {
+  width: 48%;
+}
+
+.shipping-label__info h2 {
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+}
+
+.shipping-label__info p {
+  margin: 5px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.shipping-label__order-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.shipping-label__details {
+  width: 60%;
+}
+
+.shipping-label__details p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.shipping-label__barcode {
+  width: 35%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.barcode-placeholder {
+  text-align: center;
+  padding: 10px;
+  border: 1px dashed #ddd;
+  width: 100%;
+}
+
+.barcode-placeholder i {
+  font-size: 50px;
+  margin-bottom: 10px;
+}
+
+.barcode-placeholder p {
+  margin: 0;
+  font-family: monospace;
+  font-size: 16px;
+  letter-spacing: 5px;
+}
+
+.shipping-label__footer {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  font-size: 12px;
+  color: #5a5a5a;
+}
+
+.shipping-label__footer p {
+  margin: 5px 0;
+}
