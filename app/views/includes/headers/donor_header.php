@@ -43,7 +43,7 @@
                 </a>
                
                 </a>
-                <a href="<?php echo URLROOT; ?>/donors/impact" class="sidebar-menu-item">
+                <a href="<?php echo URLROOT; ?>/donors/feedback" class="sidebar-menu-item">
                     <i class="fas fa-comment-alt"></i> Impact Reports
                 </a>
                 <a href="<?php echo URLROOT; ?>/donors/inquiries" class="sidebar-menu-item">

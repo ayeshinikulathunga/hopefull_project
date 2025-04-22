@@ -702,3 +702,164 @@
         gap: 0.8rem;
     }
 }
+
+
+
+/* Image Gallery Container */
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* For single image case */
+.image-gallery.single-image {
+    display: flex;
+    justify-content: center;
+}
+
+.single-image .impact-image {
+    max-width: 100%;
+    height: auto;
+    max-height: 500px;
+}
+
+/* Impact Image */
+.impact-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.impact-image:hover {
+    transform: scale(1.03);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Lightbox for Full-size Image Viewing */
+.feedback-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.feedback-lightbox.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.lightbox-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.25);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: white;
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.lightbox-close:hover {
+    color: var(--primary-color);
+}
+
+/* Add this to your feedback.css file */
+.feedback-images {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.feedback-images h3 {
+    color: var(--text-dark);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--background-light);
+}
+
+.feedback-images .image-timestamp {
+    display: block;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Additional style for multiple images in a gallery format */
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* For the "No Images Available" state */
+.no-images {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-md);
+    color: var(--text-light);
+}
+
+.no-images i {
+    font-size: 2.5rem;
+    color: var(--secondary-light);
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .image-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .impact-image {
+        height: 180px;
+    }
+    
+    .lightbox-content {
+        max-width: 95%;
+    }
+}
+
+@media (max-width: 480px) {
+    .image-gallery {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .single-image .impact-image {
+        max-height: 350px;
+    }
+}

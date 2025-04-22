@@ -53,11 +53,30 @@
                 </div>
             </div>
             
-            <?php if(!empty($data['feedback']->ImpactImage)): ?>
+            <?php 
+            // Check for impact images
+            $impactImagePath = UPLOADS_PATH . '/impacts/' . $data['feedback']->FeedbackID . '.jpg';
+            $impactImageUrl = UPLOADS_URL . '/impacts/' . $data['feedback']->FeedbackID . '.jpg';
+            
+            // Check for alternative extensions if jpg doesn't exist
+            if(!file_exists($impactImagePath)) {
+                $extensions = ['.png', '.jpeg', '.gif'];
+                foreach($extensions as $ext) {
+                    $testPath = UPLOADS_PATH . '/impacts/' . $data['feedback']->FeedbackID . $ext;
+                    if(file_exists($testPath)) {
+                        $impactImagePath = $testPath;
+                        $impactImageUrl = UPLOADS_URL . '/impacts/' . $data['feedback']->FeedbackID . $ext;
+                        break;
+                    }
+                }
+            }
+            
+            if(file_exists($impactImagePath)): 
+            ?>
             <div class="feedback-images">
                 <h3>Impact Photos</h3>
                 <div class="image-gallery">
-                    <img src="<?php echo URLROOT; ?>/uploads/feedback/<?php echo $data['feedback']->ImpactImage; ?>" alt="Impact Image" class="impact-image">
+                    <img src="<?php echo $impactImageUrl; ?>" alt="Impact Image" class="impact-image">
                 </div>
             </div>
             <?php endif; ?>
@@ -163,5 +182,69 @@
         </div>
     </div>
 </div>
+
+// Add this script to the end of your view_feedback.php file before the closing </body> tag
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all impact images
+    const impactImages = document.querySelectorAll('.impact-image');
+    
+    // If no images, exit early
+    if (impactImages.length === 0) return;
+    
+    // Create lightbox elements
+    const lightbox = document.createElement('div');
+    lightbox.className = 'feedback-lightbox';
+    
+    const lightboxContent = document.createElement('div');
+    lightboxContent.className = 'lightbox-content';
+    
+    const lightboxImage = document.createElement('img');
+    lightboxImage.className = 'lightbox-image';
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'lightbox-close';
+    closeButton.innerHTML = '<i class="fas fa-times"></i>';
+    
+    // Assemble lightbox
+    lightboxContent.appendChild(lightboxImage);
+    lightboxContent.appendChild(closeButton);
+    lightbox.appendChild(lightboxContent);
+    document.body.appendChild(lightbox);
+    
+    // Add click event to each image
+    impactImages.forEach(image => {
+        image.addEventListener('click', function() {
+            lightboxImage.src = this.src;
+            lightbox.classList.add('active');
+        });
+    });
+    
+    // Close lightbox on button click
+    closeButton.addEventListener('click', function() {
+        lightbox.classList.remove('active');
+    });
+    
+    // Close lightbox when clicking outside the image
+    lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) {
+            lightbox.classList.remove('active');
+        }
+    });
+    
+    // Close lightbox with escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+            lightbox.classList.remove('active');
+        }
+    });
+    
+    // Add a class for single image styling
+    if (impactImages.length === 1) {
+        document.querySelector('.image-gallery').classList.add('single-image');
+    }
+});
+</script>
 
 <?php require APPROOT . '/views/includes/footer.php'; ?>
