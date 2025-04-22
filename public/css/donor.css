@@ -1,0 +1,1522 @@
+/* Donor Dashboard Styles */
+@import 'variables.css';
+@import 'donation-checkout.css';
+
+/* General Dashboard Styles */
+.donor-dashboard {
+    padding-bottom: var(--spacing-xl);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+.section-title {
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+    position: relative;
+    padding-bottom: var(--spacing-sm);
+    font-size: 2rem;
+}
+
+.section-title:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary-color);
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, rgba(93, 135, 255, 0.65), rgba(22, 90, 154, 0.7)), url('../images/donor.jpg');
+    background-size: cover;
+    background-position: center;
+    color: var(--text-white);
+    padding: var(--spacing-xl) 0;
+    margin-bottom: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    margin-top: 40px;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+}
+
+.hero-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.hero-content p {
+    font-size: var(--font-lg);
+    opacity: 0.9;
+}
+
+/* Recent Requests Section */
+.recent-requests {
+    margin-bottom: var(--spacing-xl);
+}
+
+.requests-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    justify-content: center;
+}
+
+/* Services Section */
+.services-section {
+    background-color: var(--background-light);
+    padding: var(--spacing-xl) 0;
+    margin-bottom: var(--spacing-xl);
+}
+
+.services-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    justify-content: center;
+}
+
+.service-card {
+    background-color: var(--background-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+}
+
+.service-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.service-card h3 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-dark);
+}
+
+.service-card p {
+    color: var(--text-light);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.5;
+    flex-grow: 1;
+}
+
+.service-btn {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 10px 20px;
+    border-radius: 40px;
+    display: inline-block;
+    font-weight: var(--font-normal);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: auto;
+}
+
+.service-btn:hover {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+}
+
+/* Marketplace Section */
+.marketplace-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.marketplace-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    align-items: center;
+    background-color: var(--background-white);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.marketplace-info {
+    padding: var(--spacing-xl);
+}
+
+.marketplace-info h2 {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-dark);
+    font-size: 2rem;
+}
+
+.marketplace-info p {
+    color: var(--text-light);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+    font-size: var(--font-lg);
+}
+
+.marketplace-btn {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+    padding: 12px 28px;
+    border-radius:40px;
+    display: inline-block;
+    font-weight: var(--font-bold);
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    font-size: var(--font-lg);
+}
+
+.marketplace-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+.marketplace-image {
+    height: 100%;
+    overflow: hidden;
+}
+
+.marketplace-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Stats Section */
+.stats-section {
+    background-color: var(--background-light);
+    padding: var(--spacing-xl) 0;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--spacing-lg);
+    justify-content: center;
+}
+
+.stat-card {
+    background-color: var(--background-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    max-width: 250px;
+    margin: 0 auto;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+    background-color: var(--primary-lighter);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-info h3 {
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-light);
+    font-size: var(--font-base);
+    font-weight: var(--font-normal);
+}
+
+.stat-value {
+    color: var(--text-dark);
+    font-size: 1.8rem;
+    font-weight: var(--font-bold);
+}
+
+/* Request Cards - Unified styles for all request cards */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header .section-title {
+    margin-bottom: 0;
+}
+.request-card {
+    background-color: var(--background-white);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    max-width: 380px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.request-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.request-image {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+}
+
+.request-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.request-card:hover .request-image img {
+    transform: scale(1.05);
+}
+
+.request-type {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-size: var(--font-sm);
+    font-weight: var(--font-bold);
+    text-transform: uppercase;
+}
+
+.request-type.monetary {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+}
+
+.request-type.nonmonetary {
+    background-color: var(--info);
+    color: var(--text-white);
+}
+
+.request-details {
+    padding: var(--spacing-md);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.request-details h3 {
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-dark);
+    font-size: 1.3rem;
+}
+
+.request-category {
+    display: inline-block;
+    background-color: var(--primary-lighter);
+    color: var(--primary-dark);
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: var(--font-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.request-recipient {
+    display: block;
+    color: var(--text-light);
+    font-style: italic;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-sm);
+}
+
+.request-description {
+    color: var(--text-light);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.5;
+}
+
+.request-meta {
+    margin-bottom: var(--spacing-md);
+    flex-grow: 1;
+}
+
+.progress-container {
+    margin-bottom: var(--spacing-sm);
+}
+
+.progress-bar {
+    height: 10px;
+    background-color: #e6e6e6;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 5px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-sm);
+    color: var(--text-light);
+}
+
+.quantity-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-sm);
+    color: var(--text-light);
+    margin-bottom: var(--spacing-xs);
+}
+
+.deadline {
+    font-size: var(--font-sm);
+    color: var(--error);
+    font-weight: var(--font-bold);
+    margin-bottom: var(--spacing-sm);
+}
+
+.request-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: auto;
+}
+
+.donate-btn {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+    padding: 10px 16px;
+    border-radius: 40px;
+    display: inline-block;
+    font-weight: var(--font-bold);
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    flex-grow: 1;
+}
+
+.donate-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Add this to your CSS file */
+
+.view-details-btn {
+    background-color: var(--secondary-light);
+    color: var(--text-white);
+    padding: 10px 16px;
+    border-radius: 40px;
+    display: inline-block;
+    font-weight: var(--font-bold);
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.view-details-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Update the request-description class to remove it or hide it */
+.request-description {
+    display: none;
+}
+
+/* If you want to adjust the spacing in request-meta since description is removed */
+.request-meta {
+    margin-top: var(--spacing-sm);
+}
+
+.view-proof-btn {
+    background-color: var(--secondary-light);
+    color: var(--text-white);
+    padding: 10px 16px;
+    border-radius: 40px;
+    display: inline-block;
+    font-weight: var(--font-bold);
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.view-proof-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.no-requests {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-lg);
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-md);
+}
+
+.view-all-container {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+}
+
+.view-all-btn {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-weight: var(--font-bold);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.view-all-btn:hover {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+}
+
+
+/* Filter Section */
+.filter-section {
+    background-color: var(--light-gray);
+    margin-top: 40px; /* Increased margin top and bottom */
+    border-bottom: 1px solid var(--medium-gray);
+  }
+  
+  .filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px; /* Space between elements */
+    margin-top: 60px; /* Increased top margin */
+    padding: 15px 20px; /* Added padding inside the container */
+    background-color: var(--light-gray); 
+    border-radius: 10px; 
+  }
+  
+  /* Search Box */
+  .filter-search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+  }
+  
+  .filter-search-input {
+    width: 100%;
+    padding: 15px 45px 15px 20px; /* Increased padding */
+    border: 1px solid var(--medium-gray);
+    border-radius: 30px; /* Slightly rounded for better aesthetics */
+    font-size: 16px; /* Slightly increased font size */
+    transition: all var(--transition-speed);
+  }
+  
+  .filter-search-input:focus {
+    outline: none;
+    border-color: var(--dark-gray);
+  }
+  
+  /* Search Button */
+  .filter-btn-search {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px; /* Slightly bigger icon */
+    color: var(--dark-gray);
+  }
+  
+  .filter-btn-search:hover {
+    color: var(--primary-color);
+  }
+  
+  /* Dropdowns */
+  .filter-category, .filter-type {
+    min-width: 200px; /* Increased width */
+  }
+  
+  .filter-category select, 
+  .filter-type select {
+    width: 100%;
+    padding: 15px; /* Increased padding */
+    border: 1px solid var(--medium-gray);
+    border-radius: 30px; /* More rounded */
+    font-size: 16px;
+    transition: all var(--transition-speed);
+    background-color: white;
+    cursor: pointer;
+  }
+  
+  .filter-category select:focus, 
+  .filter-type select:focus {
+    border-color: var(--dark-gray);
+    outline: none;
+  }
+  
+  /* Filter Actions */
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  /* Clear Button */
+  .clear-btn {
+    background-color: var(--medium-gray);
+    padding: 12px 20px; /* Increased padding */
+    border-radius: 30px;
+    font-size: 16px;
+    text-decoration: none;
+    color: white;
+    transition: all var(--transition-speed);
+    border: none;
+    cursor: pointer;
+  }
+  
+  .clear-btn:hover {
+    background-color: var(--dark-gray);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .filter-container {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 20px;
+    }
+  
+    .filter-search-box,
+    .filter-category,
+    .filter-type {
+      width: 100%;
+    }
+  }
+  
+/* Responsive Design */
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-search-box,
+  .filter-category,
+  .filter-type {
+    width: 100%;
+  }
+}
+
+
+/* Requests List Grid */
+.requests-grid {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+    gap: var(--spacing-xs);
+}
+
+.pagination-link,
+.pagination-arrow {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+.pagination-link:hover,
+.pagination-arrow:hover {
+    background-color: var(--primary-lighter);
+    border-color: var(--primary-lighter);
+    color: var(--primary-dark);
+}
+
+.pagination-link.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-white);
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: var(--background-white);
+    margin: 5% auto;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    width: 80%;
+    max-width: 900px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.close-modal {
+    color: var(--text-light);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: var(--text-dark);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--background-light);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.modal-body {
+    min-height: 400px;
+}
+
+.modal-body iframe {
+    width: 100%;
+    height: 600px;
+    border: none;
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 992px) {
+    .marketplace-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .marketplace-image {
+        display: none;
+    }
+    
+    .requests-container,
+    .requests-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    
+    .filter-form {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-actions {
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+    }
+    
+    .modal-body iframe {
+        height: 500px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-content p {
+        font-size: var(--font-base);
+    }
+    
+    .services-container,
+    .stats-container {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .request-card,
+    .service-card,
+    .stat-card {
+        max-width: 100%;
+    }
+    
+    .requests-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .request-actions {
+        flex-direction: column;
+    }
+    
+    .view-proof-btn {
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .modal-body iframe {
+        height: 400px;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .request-actions {
+        flex-direction: column;
+    }
+    
+    .view-proof-btn {
+        width: 100%;
+    }
+    
+    .modal-body iframe {
+        height: 300px;
+    }
+}
+
+
+/* Donation Details Page Styles */
+.donation-details {
+    padding-bottom: var(--spacing-xl);
+    margin-top: 40px;
+}
+
+/* Breadcrumb Navigation */
+.donation-breadcrumb {
+    padding: 15px 0;
+    font-size: 14px;
+    color: var(--secondary-color);
+    margin-bottom: 30px;
+}
+
+.donation-breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.donation-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* Donation Detail Layout */
+.donation-detail__container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 50px;
+}
+
+/* Donation Images */
+.donation-detail__images {
+    position: relative;
+}
+
+.donation-detail__main-image {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: var(--shadow-lg);
+    height: 450px;
+    object-fit: cover;
+}
+
+.donation-type {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: var(--font-bold);
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+.donation-type.monetary {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+}
+
+.donation-type.nonmonetary {
+    background-color: var(--info);
+    color: var(--text-white);
+}
+
+/* Donation Info */
+.donation-detail__info h1 {
+    font-size: 28px;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    line-height: 1.3;
+}
+
+.donation-detail__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.donation-detail__category {
+    background-color: var(--primary-lighter);
+    color: var(--primary-dark);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+.donation-detail__recipient {
+    font-size: 14px;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.donation-detail__description {
+    color: var(--text-light);
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+/* Progress Section */
+.donation-detail__progress-section {
+    background-color: var(--background-light);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.donation-detail__progress-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    font-size: 18px;
+}
+
+.donation-detail__progress {
+    margin-bottom: 15px;
+}
+
+.progress-bar {
+    height: 12px;
+    background-color: #e6e6e6;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 6px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-stats {
+    display: flex;
+    flex-direction: column;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.progress-percentage {
+    font-weight: var(--font-bold);
+    font-size: 24px;
+    color: var(--primary-color);
+}
+
+.donation-detail__item-info {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e6e6e6;
+}
+
+.donation-detail__item-info p {
+    margin: 5px 0;
+    color: var(--text-dark);
+}
+
+.donation-detail__deadline {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e6e6e6;
+}
+
+.donation-detail__deadline p {
+    margin: 5px 0;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.donation-detail__deadline i {
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+.days-left {
+    color: var(--info) !important;
+}
+
+.expired {
+    color: var(--error) !important;
+}
+
+/* Donation Actions */
+.donation-detail__actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.donation-btn {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+    padding: 12px 25px;
+    border-radius: 40px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: var(--font-bold);
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    flex: 1;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.donation-btn:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.view-proof-btn {
+    background-color: var(--secondary-light);
+    color: var(--text-white);
+    padding: 12px 25px;
+    border-radius: 40px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: var(--font-bold);
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    flex: 1;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.view-proof-btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tabs Section */
+.donation-tabs {
+    margin-bottom: 50px;
+}
+
+.donation-tab-buttons {
+    display: flex;
+    border-bottom: 1px solid var(--background-light);
+    margin-bottom: 20px;
+}
+
+.donation-tab-btn {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-light);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.donation-tab-btn.active {
+    color: var(--primary-color);
+}
+
+.donation-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary-color);
+}
+
+.donation-tab-content {
+    display: none;
+    padding: 10px 0 30px;
+}
+
+.donation-tab-content.active {
+    display: block;
+}
+
+.donation-tab-content h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+}
+
+.donation-tab-content p {
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.donation-tab-content h4 {
+    font-size: 18px;
+    margin: 20px 0 10px;
+    color: var(--text-dark);
+}
+
+/* Impact Cards */
+.impact-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.impact-card {
+    background-color: var(--background-white);
+    padding: 25px;
+    border-radius: var(--border-radius-md);
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.impact-card:hover {
+    transform: translateY(-5px);
+}
+
+.impact-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    background-color: var(--primary-lighter);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+}
+
+.impact-card h4 {
+    margin: 0 0 10px;
+    color: var(--text-dark);
+    font-size: 18px;
+}
+
+.impact-card p {
+    color: var(--text-light);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Updates Timeline */
+.updates-timeline {
+    padding: 20px 0;
+}
+
+.update-item {
+    position: relative;
+    padding-left: 30px;
+    padding-bottom: 25px;
+    border-left: 2px solid var(--primary-lighter);
+    margin-left: 15px;
+}
+
+.update-item:last-child {
+    padding-bottom: 0;
+    border-left: 2px solid transparent;
+}
+
+.update-date {
+    position: absolute;
+    left: -75px;
+    top: 0;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.update-item::before {
+    content: '';
+    position: absolute;
+    left: -9px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+}
+
+.update-content {
+    background-color: var(--background-light);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.update-content h4 {
+    margin: 0 0 10px;
+    color: var(--text-dark);
+    font-size: 16px;
+}
+
+.update-content p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Location Info */
+.donation-location-info {
+    background-color: var(--background-light);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.donation-location-info h4 {
+    margin-top: 0;
+    color: var(--text-dark);
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.donation-location-info p {
+    margin: 8px 0;
+    color: var(--text-dark);
+    font-size: 14px;
+}
+
+/* Placeholder for when request not found */
+.no-request {
+    text-align: center;
+    padding: 60px 0;
+    background-color: var(--background-light);
+    border-radius: 10px;
+    margin: 40px 0;
+}
+
+.no-request h2 {
+    color: var(--text-dark);
+    margin-bottom: 15px;
+}
+
+.no-request p {
+    color: var(--text-light);
+    margin-bottom: 25px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.back-btn {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+    padding: 12px 25px;
+    border-radius: 40px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: var(--font-bold);
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.back-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 992px) {
+    .donation-detail__container {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .donation-detail__main-image {
+        height: 350px;
+    }
+    
+    .impact-cards {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    
+    .update-date {
+        position: relative;
+        left: 0;
+        top: 0;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .update-item {
+        padding-left: 20px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .donation-detail__meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .donation-detail__actions {
+        flex-direction: column;
+    }
+    
+    .donation-tab-buttons {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 5px;
+    }
+    
+    .donation-tab-btn {
+        padding: 12px 15px;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .donation-detail__main-image {
+        height: 250px;
+    }
+    
+    .impact-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+.donor-filters {
+    margin-top: 40px;
+    background-color: var(--light-gray);
+    padding: 5px 5px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--medium-gray);
+  }
+  .donor-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 40px;
+  }
+  .donor-search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+  }
+  .donor-search-input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 1px solid var(--medium-gray);
+    border-radius: 25px;
+    font-size: 14px;
+    transition: all var(--transition-speed);
+  }
+  .donor-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.2);
+  }
+  .donor-btn-search {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--secondary-color);
+    cursor: pointer;
+    font-size: 16px;
+    transition: color var(--transition-speed);
+  }
+  .donor-btn-search:hover {
+    color: var(--primary-color);
+  }
+
+  
+  .donor-requests__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+  }
+  .donor-request-card {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--medium-gray);
+  }
+  .donor-request-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+  }
+  .donor-request-card__image-container {
+    height: 220px;
+    overflow: hidden;
+    position: relative;
+  }
+  .donor-request-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-speed);
+  }
+  .donor-request-card:hover .donor-request-card__image {
+    transform: scale(1.08);
+  }
+  .donor-request-card__content {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+  .donor-request-card__title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    color: var(--dark-gray);
+  }
+  .donor-request-card__meta {
+    font-size: 13px;
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+  }
+  .donor-request-card__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    gap: 8px;
+  }
+  .donor-request-card__button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color var(--transition-speed), transform var(--transition-speed);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .donor-request-card__button:hover {
+    background-color: #3a7bff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+
+
+  .donor-status-badge {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .donor-status-urgent {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+  }
+  .donor-status-fulfilled {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+  }
+  
+
+  @media (max-width: 768px) {
+    .donor-filter-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .donor-requests__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  

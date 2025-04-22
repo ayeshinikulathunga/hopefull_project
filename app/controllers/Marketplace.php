@@ -1,0 +1,773 @@
+<?php
+class Marketplace extends Controller {
+    private $productModel;
+    private $userModel;
+    private $donorModel;
+    private $orderModel;
+    private $sellerModel;
+    private $db;
+
+    public function __construct() {
+        // Load models
+        $this->productModel = $this->model('Product');
+        $this->orderModel = $this->model('Order');
+        $this->sellerModel = $this->model('Seller');
+        $this->orderModel = $this->model('Order');
+        
+        // For donor-specific actions, load the donor model
+        // Initialize database connection
+        $this->db = new Database();
+    }
+
+    // Main marketplace index page - can be accessed by anyone
+    public function index() {
+        // Get only 3 recent products for homepage
+        $recentProducts = $this->productModel->getRecentProducts(3);
+        
+        // Get categories with counts
+        $categories = $this->productModel->getCategories();
+
+        $totalArtisans = $this->sellerModel->getTotalSellers();
+        $totalProducts = $this->productModel->getTotalProductsCount();
+        $totalRevenue = $this->orderModel->getTotalRevenue();
+
+        $data = [
+            'title' => 'Hopefull Marketplace',
+            'description' => 'Support artisans with disabilities by purchasing their handcrafted products',
+            'recentProducts' => $recentProducts,
+            'categories' => $categories,
+            'totalArtisans' => $totalArtisans,
+            'totalProducts' => $totalProducts,
+            'totalRevenue' => $totalRevenue
+        ];
+
+        $this->view('marketplace/index', $data);
+    }
+    
+    // All products page with pagination
+    public function allProducts() {
+        // Default values
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $perPage = 12; // Products per page
+        $category = isset($_GET['category']) ? $_GET['category'] : null;
+        
+        // Get paginated products
+        $products = $this->productModel->getPaginatedProducts($page, $perPage, $category);
+        
+        // Get total products count for pagination
+        $totalProducts = $this->productModel->getTotalProductsCount($category);
+        $totalPages = ceil($totalProducts / $perPage);
+        
+        $data = [
+            'title' => $category ? $category . ' Products' : 'All Products',
+            'description' => 'Browse all handcrafted products made by artisans with disabilities',
+            'products' => $products,
+            'pagination' => [
+                'currentPage' => $page,
+                'totalPages' => $totalPages,
+                'perPage' => $perPage,
+                'totalProducts' => $totalProducts
+            ]
+        ];
+
+        $this->view('marketplace/allProducts', $data);
+    }
+    
+    // Search products
+    public function search() {
+        if(isset($_GET['term'])) {
+            $term = trim($_GET['term']);
+            
+            if(!empty($term)) {
+                $products = $this->productModel->searchProducts($term);
+                
+                $data = [
+                    'title' => 'Search Results for "' . $term . '"',
+                    'description' => 'Search results for "' . $term . '"',
+                    'products' => $products,
+                    'searchTerm' => $term
+                ];
+                
+                $this->view('marketplace/search', $data);
+            } else {
+                redirect('marketplace/allProducts');
+            }
+        } else {
+            redirect('marketplace/allProducts');
+        }
+    }
+
+    // View single product details
+    public function product($id = null) {
+        if ($id === null) {
+            redirect('marketplace/allProducts');
+        }
+
+        $product = $this->productModel->getProductById($id);
+
+        if (!$product) {
+            flash('product_error', 'Product not found', 'alert alert-danger');
+            redirect('marketplace/allProducts');
+        }
+
+        $data = [
+            'title' => $product->ProductName,
+            'product' => $product
+        ];
+
+        $this->view('marketplace/product', $data);
+    }
+
+    // Add product to cart (requires login)
+    public function addToCart() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            // Store intended product in session for redirect after login
+            if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['product_id'])) {
+                $_SESSION['redirect_after_login'] = 'marketplace/product/' . $_POST['product_id'];
+            }
+            
+            flash('login_message', 'Please log in to add items to your cart', 'alert alert-info');
+            redirect('users/login');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            $data = [
+                'product_id' => trim($_POST['product_id']),
+                'quantity' => isset($_POST['quantity']) ? intval($_POST['quantity']) : 1,
+                'user_id' => $_SESSION['user_id']
+            ];
+
+            // Add to cart (implement cart functionality in session)
+            if (!isset($_SESSION['cart'])) {
+                $_SESSION['cart'] = [];
+            }
+            
+            // Check if product already exists in cart
+            $productExists = false;
+            foreach ($_SESSION['cart'] as $key => $item) {
+                if ($item['product_id'] == $data['product_id']) {
+                    $_SESSION['cart'][$key]['quantity'] += $data['quantity'];
+                    $productExists = true;
+                    break;
+                }
+            }
+            
+            // If product doesn't exist in cart, add it
+            if (!$productExists) {
+                $product = $this->productModel->getProductById($data['product_id']);
+                if ($product) {
+                    $_SESSION['cart'][] = [
+                        'product_id' => $data['product_id'],
+                        'quantity' => $data['quantity'],
+                        'name' => $product->ProductName,
+                        'price' => $product->Price,
+                        'image' => $product->ProductImage ?? 'default.jpg'
+                    ];
+                }
+            }
+
+            flash('cart_message', 'Product added to cart', 'alert alert-success');
+            redirect('marketplace/cart');
+        } else {
+            redirect('marketplace/allProducts');
+        }
+    }
+
+    // View shopping cart
+    public function cart() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('login_message', 'Please log in to view your cart', 'alert alert-info');
+            redirect('users/login');
+        }
+
+        $data = [
+            'title' => 'Your Shopping Cart',
+            'cart_items' => isset($_SESSION['cart']) ? $_SESSION['cart'] : []
+        ];
+        
+        // Calculate total
+        $data['total'] = 0;
+        foreach ($data['cart_items'] as $item) {
+            $data['total'] += $item['price'] * $item['quantity'];
+        }
+
+        $this->view('marketplace/cart', $data);
+    }
+
+    // Remove item from cart
+    public function removeFromCart($productId = null) {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            redirect('users/login');
+        }
+
+        if ($productId !== null && isset($_SESSION['cart'])) {
+            foreach ($_SESSION['cart'] as $key => $item) {
+                if ($item['product_id'] == $productId) {
+                    unset($_SESSION['cart'][$key]);
+                    // Reset array keys
+                    $_SESSION['cart'] = array_values($_SESSION['cart']);
+                    break;
+                }
+            }
+        }
+        
+        flash('cart_message', 'Item removed from cart', 'alert alert-success');
+        redirect('marketplace/cart');
+    }
+
+    // Update cart quantity
+    public function updateCart() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            redirect('users/login');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            if (isset($_POST['quantities']) && is_array($_POST['quantities'])) {
+                foreach ($_POST['quantities'] as $productId => $quantity) {
+                    $quantity = intval($quantity);
+                    if ($quantity <= 0) {
+                        $this->removeFromCart($productId);
+                        continue;
+                    }
+                    
+                    // Update quantity
+                    foreach ($_SESSION['cart'] as $key => $item) {
+                        if ($item['product_id'] == $productId) {
+                            $_SESSION['cart'][$key]['quantity'] = $quantity;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            flash('cart_message', 'Cart updated successfully', 'alert alert-success');
+            redirect('marketplace/cart');
+        } else {
+            redirect('marketplace/cart');
+        }
+    }
+
+    public function checkout() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('login_message', 'Please log in to checkout', 'alert alert-info');
+            redirect('users/login');
+        }
+    
+        // Check if cart is empty
+        if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+            flash('cart_message', 'Your cart is empty', 'alert alert-info');
+            redirect('marketplace/cart');
+        }
+    
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $data = [
+                'user_id' => $_SESSION['user_id'],
+                'total_amount' => 0,
+                'shipping_address' => trim($_POST['shipping_address']),
+                'shipping_address_err' => '',
+                'payment_method' => trim($_POST['payment_method']),
+                'payment_method_err' => '',
+                'contact_phone' => trim($_POST['contact_phone'] ?? ''),
+                'contact_phone_err' => '',
+                'shipping_notes' => trim($_POST['shipping_notes'] ?? '')
+            ];
+    
+            // Calculate total
+            $subtotal = 0;
+            foreach ($_SESSION['cart'] as $item) {
+                $subtotal += $item['price'] * $item['quantity'];
+            }
+            
+            // Add shipping cost (Rs. 350)
+            $data['total_amount'] = $subtotal + 350;
+    
+            // Validate inputs
+            if (empty($data['shipping_address'])) {
+                $data['shipping_address_err'] = 'Please enter shipping address';
+            }
+    
+            if (empty($data['payment_method'])) {
+                $data['payment_method_err'] = 'Please select a payment method';
+            }
+    
+            if (empty($data['contact_phone'])) {
+                $data['contact_phone_err'] = 'Please enter contact number for delivery';
+            } elseif (strlen($data['contact_phone']) < 10) {
+                $data['contact_phone_err'] = 'Contact number must be at least 10 characters';
+            }
+    
+            // If no errors, create order
+            if (empty($data['shipping_address_err']) && empty($data['payment_method_err']) && empty($data['contact_phone_err'])) {
+                // Start transaction
+                $this->db->beginTransaction();
+                
+                try {
+                    // Create order
+                    $orderData = [
+                        'user_id' => $data['user_id'],
+                        'total_amount' => $data['total_amount'],
+                        'shipping_address' => $data['shipping_address'],
+                        'payment_method' => $data['payment_method']
+                    ];
+                    
+                    $orderId = $this->orderModel->createOrder($orderData);
+                    
+                    if (!$orderId) {
+                        throw new Exception("Failed to create order");
+                    }
+                    
+                    // Create shipping record
+                    $shippingData = [
+                        'order_id' => $orderId,
+                        'shipping_address' => $data['shipping_address'],
+                        'contact_phone' => $data['contact_phone'],
+                        'payment_method' => $data['payment_method'],
+                        'shipping_notes' => $data['shipping_notes']
+                    ];
+                    
+                    $shippingId = $this->orderModel->createShippingDetails($shippingData);
+                    
+                    if (!$shippingId) {
+                        throw new Exception("Failed to create shipping record");
+                    }
+                    
+                    // Add order items
+                    $orderItemsSuccess = true;
+                    foreach ($_SESSION['cart'] as $item) {
+                        $orderItem = [
+                            'order_id' => $orderId,
+                            'product_id' => $item['product_id'],
+                            'quantity' => $item['quantity'],
+                            'price' => $item['price']
+                        ];
+                        
+                        if (!$this->orderModel->addOrderItem($orderItem)) {
+                            $orderItemsSuccess = false;
+                            error_log("Failed to add item to order: " . json_encode($orderItem));
+                            break;
+                        }
+                    }
+                    
+                    if (!$orderItemsSuccess) {
+                        throw new Exception("Failed to add items to order");
+                    }
+                    
+                    // Everything successful - commit transaction
+                    $this->db->commit();
+                    
+                    // Clear cart
+                    unset($_SESSION['cart']);
+                    
+                    flash('order_message', 'Order placed successfully', 'alert alert-success');
+                    redirect('marketplace/orderConfirmation/' . $orderId);
+                    
+                } catch (Exception $e) {
+                    // Something went wrong - rollback
+                    $this->db->rollBack();
+                    error_log("Checkout error: " . $e->getMessage());
+                    flash('order_error', 'Something went wrong, please try again', 'alert alert-danger');
+                    $this->view('marketplace/checkout', $data);
+                }
+            } else {
+                // Load view with errors
+                $this->view('marketplace/checkout', $data);
+            }
+        } else {
+            $data = [
+                'title' => 'Checkout',
+                'cart_items' => $_SESSION['cart'],
+                'total' => 0,
+                'shipping_address' => '',
+                'shipping_address_err' => '',
+                'payment_method' => '',
+                'payment_method_err' => '',
+                'contact_phone' => '',
+                'contact_phone_err' => '',
+                'shipping_notes' => ''
+            ];
+    
+            // Calculate total
+            foreach ($data['cart_items'] as $item) {
+                $data['total'] += $item['price'] * $item['quantity'];
+            }
+    
+            $this->view('marketplace/checkout', $data);
+        }
+    }
+
+    // Order confirmation
+    public function orderConfirmation($orderId = null) {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            redirect('users/login');
+        }
+
+        if ($orderId === null) {
+            redirect('marketplace/allProducts');
+        }
+
+        $order = $this->orderModel->getOrderById($orderId);
+        $orderItems = $this->orderModel->getOrderItems($orderId);
+
+        if (!$order || $order->UserID != $_SESSION['user_id']) {
+            flash('order_error', 'Order not found', 'alert alert-danger');
+            redirect('marketplace/allProducts');
+        }
+
+        $data = [
+            'title' => 'Order Confirmation',
+            'order' => $order,
+            'order_items' => $orderItems
+        ];
+
+        $this->view('marketplace/orderConfirmation', $data);
+    }
+
+    // View order history (for logged in users)
+    public function orders() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('login_message', 'Please log in to view your orders', 'alert alert-info');
+            redirect('users/login');
+        }
+
+        $orders = $this->orderModel->getUserOrders($_SESSION['user_id']);
+
+        $data = [
+            'title' => 'Your Orders',
+            'orders' => $orders
+        ];
+
+        $this->view('marketplace/orders', $data);
+    }
+
+   
+    
+    // Track an order
+    public function track() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('login_message', 'Please log in to track your orders', 'alert alert-info');
+            redirect('users/login');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Process form submission
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            $orderNumber = trim($_POST['order_number']);
+            
+            if (!empty($orderNumber)) {
+                $order = $this->orderModel->getOrderById($orderNumber);
+                
+                if ($order && $order->UserID == $_SESSION['user_id']) {
+                    redirect('marketplace/orderDetails/' . $orderNumber);
+                } else {
+                    flash('track_error', 'Order not found or does not belong to you', 'alert alert-danger');
+                    redirect('marketplace/track');
+                }
+            } else {
+                flash('track_error', 'Please enter an order number', 'alert alert-danger');
+                redirect('marketplace/track');
+            }
+        }
+
+        $data = [
+            'title' => 'Track Your Order'
+        ];
+
+        $this->view('marketplace/track', $data);
+    }
+    
+   
+
+// Product inquiries
+public function inquiries() {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        flash('login_message', 'Please log in to submit inquiries', 'alert alert-info');
+        redirect('users/login');
+    }
+
+    // Load the inquiry model
+    $inquiryModel = $this->model('Inquiry');
+    
+    // Load the product model to get actual products
+    $productModel = $this->productModel;
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Process form submission
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        
+        $data = [
+            'product_id' => trim($_POST['product_id']),
+            'user_id' => $_SESSION['user_id'],
+            'message' => trim($_POST['message']),
+            'product_id_err' => '',
+            'message_err' => '',
+            'products' => $productModel->getAllProducts(),
+            'inquiries' => $inquiryModel->getUserInquiries($_SESSION['user_id'])
+        ];
+        
+        // Validate product ID
+        if (empty($data['product_id'])) {
+            $data['product_id_err'] = 'Please select a product';
+        } else {
+            // Check if product exists
+            $product = $productModel->getProductById($data['product_id']);
+            if (!$product) {
+                $data['product_id_err'] = 'Selected product does not exist';
+            }
+        }
+        
+        // Validate message
+        if (empty($data['message'])) {
+            $data['message_err'] = 'Please enter your inquiry';
+        }
+        
+        // If no errors, save inquiry
+        if (empty($data['product_id_err']) && empty($data['message_err'])) {
+            if ($inquiryModel->createInquiry($data)) {
+                flash('inquiry_message', 'Your inquiry has been submitted. We will get back to you soon.', 'alert alert-success');
+                redirect('marketplace/inquiries');
+            } else {
+                flash('inquiry_message', 'Something went wrong. Please try again.', 'alert alert-danger');
+                $this->view('marketplace/inquiries', $data);
+            }
+        } else {
+            // Load view with errors
+            $this->view('marketplace/inquiries', $data);
+        }
+    } else {
+        // Load page with empty form and existing inquiries
+        $data = [
+            'product_id' => '',
+            'message' => '',
+            'product_id_err' => '',
+            'message_err' => '',
+            'products' => $productModel->getAllProducts(),
+            'inquiries' => $inquiryModel->getUserInquiries($_SESSION['user_id'])
+        ];
+
+        $this->view('marketplace/inquiries', $data);
+    }
+}
+   
+
+/*public function orderDetails($orderId = null) {
+    // Redirect if no order ID provided
+    if (!$orderId) {
+        redirect('marketplace/orders');
+    }
+    
+    // Make sure user is logged in by checking session
+    if (!isset($_SESSION['user_id'])) {
+        redirect('users/login');
+    }
+    
+    // Initialize the Order model
+    $orderModel = $this->model('Order');
+    
+    // Fetch the order details
+    $order = $orderModel->getOrderById($orderId);
+    
+    // If order doesn't exist or doesn't belong to the current user, redirect
+    if (!$order || $order->UserID != $_SESSION['user_id']) {
+        // You might want to set a flash message here about the order not existing
+        redirect('marketplace/orders');
+    }
+    
+    // Fetch order items with product details
+    $orderItems = $orderModel->getOrderItems($orderId);
+    
+    // Load the view with data
+    $this->view('marketplace/orderDetails', [
+        'title' => 'Order Details',
+        'order' => $order,
+        'order_items' => $orderItems
+    ]);
+}
+
+// Method to handle order cancellation
+public function cancelOrder() {
+    // Check if POST request
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        redirect('marketplace/orders');
+    }
+    
+    // Make sure user is logged in by checking session
+    if (!isset($_SESSION['user_id'])) {
+        redirect('users/login');
+    }
+    
+    // Get the order ID from POST data
+    $orderId = $_POST['order_id'];
+    
+    // Initialize the Order model
+    $orderModel = $this->model('Order');
+    
+    // Fetch the order to verify ownership
+    $order = $orderModel->getOrderById($orderId);
+    
+    // If order doesn't exist or doesn't belong to the current user, redirect
+    if (!$order || $order->UserID != $_SESSION['user_id']) {
+        flash('order_message', 'Invalid order or permission denied', 'alert alert-danger');
+        redirect('marketplace/orders');
+    }
+    
+    // Check if order is in a cancellable state (typically only 'Pending' orders can be cancelled)
+    if ($order->Status != 'Pending') {
+        flash('order_message', 'This order cannot be cancelled in its current state', 'alert alert-danger');
+        redirect('marketplace/orderDetails/' . $orderId);
+    }
+    
+    // Attempt to cancel the order
+    if ($orderModel->cancelOrder($orderId)) {
+        flash('order_message', 'Order successfully cancelled', 'alert alert-success');
+    } else {
+        flash('order_message', 'Something went wrong, please try again', 'alert alert-danger');
+    }
+    
+    redirect('marketplace/orders');
+}*/
+
+
+public function orderDetails($orderId = null) {
+    // Redirect if no order ID provided
+    if (!$orderId) {
+        redirect('marketplace/orders');
+    }
+    
+    // Make sure user is logged in by checking session
+    if (!isset($_SESSION['user_id'])) {
+        redirect('users/login');
+    }
+    
+    // Initialize the Order model if not already loaded
+    if (!isset($this->orderModel)) {
+        $this->orderModel = $this->model('Order');
+    }
+    
+    // Fetch the order details with shipping information
+    $order = $this->orderModel->getOrderById($orderId);
+    
+    // If order doesn't exist or doesn't belong to the current user, redirect
+    if (!$order || $order->UserID != $_SESSION['user_id']) {
+        flash('order_error', 'Order not found or access denied', 'alert alert-danger');
+        redirect('marketplace/orders');
+    }
+    
+    // Fetch order items with product details
+    $orderItems = $this->orderModel->getOrderItems($orderId);
+    
+    // Load the view with data
+    $this->view('marketplace/orderDetails', [
+        'title' => 'Order Details',
+        'order' => $order,
+        'order_items' => $orderItems
+    ]);
+}
+
+
+
+
+// Wishlist functionality
+public function wishlist() {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        flash('login_message', 'Please log in to view your wishlist', 'alert alert-info');
+        redirect('users/login');
+    }
+
+    // Get wishlist items from session
+    $wishlistItems = [];
+    if (isset($_SESSION['wishlist']) && !empty($_SESSION['wishlist'])) {
+        foreach ($_SESSION['wishlist'] as $productId) {
+            $product = $this->productModel->getProductById($productId);
+            if ($product) {
+                $wishlistItems[] = $product;
+            }
+        }
+    }
+
+    $data = [
+        'title' => 'Your Wishlist',
+        'wishlistItems' => $wishlistItems
+    ];
+
+    $this->view('marketplace/wishlist', $data);
+}
+
+// Add to wishlist
+public function addToWishlist($productId = null) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        // Store intended product in session for redirect after login
+        if ($productId) {
+            $_SESSION['redirect_after_login'] = 'marketplace/product/' . $productId;
+        }
+        
+        flash('login_message', 'Please log in to add items to your wishlist', 'alert alert-info');
+        redirect('users/login');
+    }
+
+    if ($productId) {
+        // Initialize wishlist session array if it doesn't exist
+        if (!isset($_SESSION['wishlist'])) {
+            $_SESSION['wishlist'] = [];
+        }
+        
+        // Check if product already exists in wishlist
+        if (!in_array($productId, $_SESSION['wishlist'])) {
+            // Add product to wishlist
+            $_SESSION['wishlist'][] = $productId;
+            flash('wishlist_message', 'Product added to your wishlist', 'alert alert-success');
+        } else {
+            flash('wishlist_message', 'Product is already in your wishlist', 'alert alert-info');
+        }
+    }
+
+    // Redirect to wishlist page
+    redirect('marketplace/wishlist');
+}
+
+
+// Remove from wishlist
+public function removeFromWishlist($productId = null) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        redirect('users/login');
+    }
+
+    if ($productId !== null && isset($_SESSION['wishlist'])) {
+        // Find and remove the product from wishlist
+        $key = array_search($productId, $_SESSION['wishlist']);
+        if ($key !== false) {
+            unset($_SESSION['wishlist'][$key]);
+            // Reset array keys
+            $_SESSION['wishlist'] = array_values($_SESSION['wishlist']);
+            flash('wishlist_message', 'Item removed from wishlist', 'alert alert-success');
+        }
+    }
+    
+    redirect('marketplace/wishlist');
+}
+
+
+
+    
+}
