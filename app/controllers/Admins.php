@@ -272,6 +272,5 @@ class Admins extends Controller {
             exit;
         }
     }
-
     
 }
