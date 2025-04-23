@@ -41,16 +41,7 @@
             </div>
         </div>
         
-        <div class="dashboard-card">
-            <div class="card-icon">
-                <i class="fas fa-user-shield"></i>
-            </div>
-            <div class="card-content">
-                <h3><?php echo $data['moderator']->VerificationCount; ?></h3>
-                <p>Your Verifications</p>
-            </div>
-        </div>
-    </div>
+       
     
     <!-- Charts & Tables Row -->
     <div class="dashboard-grid">
@@ -88,7 +79,7 @@
                                     <td><?php echo $recipient->OrganizationType; ?></td>
                                     <td><?php echo date('M d, Y', strtotime($recipient->RegisteredDate)); ?></td>
                                     <td>
-                                        <a href="<?php echo URLROOT; ?>/authModerators/manageRecipients" class="btn btn-sm btn-success">
+                                        <a href="<?php echo URLROOT; ?>/authModerators/manageRecipients" class="btn btn-sm btn-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>
@@ -121,7 +112,6 @@
                         <tr>
                             <th>Name</th>
                             <th>Status</th>
-                            <th>Verified By</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -134,7 +124,7 @@
                                         <?php echo $recipient->VerificationStatus; ?>
                                     </span>
                                 </td>
-                                <td><?php echo $recipient->ModeratorFirstName . ' ' . $recipient->ModeratorLastName; ?></td>
+                                
                                 <td><?php echo date('M d, Y', strtotime($recipient->ApprovalDate)); ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -308,5 +298,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .btn-sm {
     padding: 4px 8px;
-    font
 }    
