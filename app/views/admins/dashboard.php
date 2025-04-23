@@ -71,9 +71,9 @@
                     <td><?php echo $request->OrganizationType; ?></td>
                     <td><?php echo $request->Email; ?></td>
                     <td>
-                    <a href="<?php echo URLROOT; ?>/admins/verifications" class="btn btn-sm btn-success">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                        <a href="<?php echo URLROOT; ?>/admins/verifications" class="btn btn-sm btn-primary">
+                            Review
+                        </a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
