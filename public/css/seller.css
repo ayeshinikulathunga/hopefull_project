@@ -1,6 +1,6 @@
 /* 
  * Seller Panel Stylesheet for Hopefull
- * This stylesheet is separate from admin.css to avoid conflicts
+ 
  */
 
  @import 'variables.css';
@@ -1137,7 +1137,7 @@
  }
  
  /* Button Styles */
- .btn {
+ /*.btn {
      padding: 10px 15px;
      border-radius: 50px;
      font-weight: 500;
@@ -1207,7 +1207,261 @@
  .btn-warning:hover, .btn-sm.btn-warning:hover {
      background-color: rgba(255, 152, 0, 0.2);
      transform: translateY(-2px);
- }
+ }*/
+
+ /* Button Styles for Seller Dashboard */
+/* Namespace all button styles with a seller- prefix and make them apply only within seller pages */
+
+.seller-dashboard .btn,
+.seller-products .btn,
+.seller-add-product .btn,
+.seller-edit-product .btn,
+.seller-orders .btn,
+.seller-order-details .btn,
+.seller-inventory .btn,
+.seller-inquiries .btn,
+.seller-delivery .btn,
+.seller-cancellation-requests .btn,
+.modal .btn {
+    display: inline-flex;
+    padding: 10px 15px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: none;
+}
+
+.seller-dashboard .btn-sm,
+.seller-products .btn-sm,
+.seller-add-product .btn-sm,
+.seller-edit-product .btn-sm,
+.seller-orders .btn-sm,
+.seller-order-details .btn-sm,
+.seller-inventory .btn-sm,
+.seller-inquiries .btn-sm,
+.seller-delivery .btn-sm,
+.seller-cancellation-requests .btn-sm,
+.modal .btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    border-radius: 50px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: none;
+}
+
+.seller-dashboard .btn-primary,
+.seller-products .btn-primary,
+.seller-add-product .btn-primary,
+.seller-edit-product .btn-primary,
+.seller-orders .btn-primary,
+.seller-order-details .btn-primary,
+.seller-inventory .btn-primary,
+.seller-inquiries .btn-primary,
+.seller-delivery .btn-primary,
+.seller-cancellation-requests .btn-primary,
+.modal .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+   
+}
+
+.seller-dashboard .btn-primary:hover,
+.seller-products .btn-primary:hover,
+.seller-add-product .btn-primary:hover,
+.seller-edit-product .btn-primary:hover,
+.seller-orders .btn-primary:hover,
+.seller-order-details .btn-primary:hover,
+.seller-inventory .btn-primary:hover,
+.seller-inquiries .btn-primary:hover,
+.seller-delivery .btn-primary:hover,
+.seller-cancellation-requests .btn-primary:hover,
+.modal .btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.seller-dashboard .btn-secondary,
+.seller-products .btn-secondary,
+.seller-add-product .btn-secondary,
+.seller-edit-product .btn-secondary,
+.seller-orders .btn-secondary,
+.seller-order-details .btn-secondary,
+.seller-inventory .btn-secondary,
+.seller-inquiries .btn-secondary,
+.seller-delivery .btn-secondary,
+.seller-cancellation-requests .btn-secondary,
+.modal .btn-secondary {
+    background-color: #f5f5f5;
+    color: var(--admin-text-dark);
+}
+
+.seller-dashboard .btn-secondary:hover,
+.seller-products .btn-secondary:hover,
+.seller-add-product .btn-secondary:hover,
+.seller-edit-product .btn-secondary:hover,
+.seller-orders .btn-secondary:hover,
+.seller-order-details .btn-secondary:hover,
+.seller-inventory .btn-secondary:hover,
+.seller-inquiries .btn-secondary:hover,
+.seller-delivery .btn-secondary:hover,
+.seller-cancellation-requests .btn-secondary:hover,
+.modal .btn-secondary:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.seller-dashboard .btn-danger,
+.seller-products .btn-danger,
+.seller-add-product .btn-danger,
+.seller-edit-product .btn-danger,
+.seller-orders .btn-danger,
+.seller-order-details .btn-danger,
+.seller-inventory .btn-danger,
+.seller-inquiries .btn-danger,
+.seller-delivery .btn-danger,
+.seller-cancellation-requests .btn-danger,
+.modal .btn-danger {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #d32f2f;
+}
+
+.seller-dashboard .btn-danger:hover,
+.seller-products .btn-danger:hover,
+.seller-add-product .btn-danger:hover,
+.seller-edit-product .btn-danger:hover,
+.seller-orders .btn-danger:hover,
+.seller-order-details .btn-danger:hover,
+.seller-inventory .btn-danger:hover,
+.seller-inquiries .btn-danger:hover,
+.seller-delivery .btn-danger:hover,
+.seller-cancellation-requests .btn-danger:hover,
+.modal .btn-danger:hover {
+    background-color: rgba(244, 67, 54, 0.2);
+    transform: translateY(-2px);
+}
+
+.seller-dashboard .btn-warning,
+.seller-products .btn-warning,
+.seller-add-product .btn-warning,
+.seller-edit-product .btn-warning,
+.seller-orders .btn-warning,
+.seller-order-details .btn-warning,
+.seller-inventory .btn-warning,
+.seller-inquiries .btn-warning,
+.seller-delivery .btn-warning,
+.seller-cancellation-requests .btn-warning,
+.modal .btn-warning {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #f57c00;
+}
+
+.seller-dashboard .btn-warning:hover,
+.seller-products .btn-warning:hover,
+.seller-add-product .btn-warning:hover,
+.seller-edit-product .btn-warning:hover,
+.seller-orders .btn-warning:hover,
+.seller-order-details .btn-warning:hover,
+.seller-inventory .btn-warning:hover,
+.seller-inquiries .btn-warning:hover,
+.seller-delivery .btn-warning:hover,
+.seller-cancellation-requests .btn-warning:hover,
+.modal .btn-warning:hover {
+    background-color: rgba(255, 152, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+
+
+
+/* Target the view buttons specifically in product cards */
+.product-card .product-actions a,
+.products-grid .product-card .btn,
+.product-card .view-btn,
+.products-grid .view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    margin: 0 4px;
+}
+
+/* Specific styling for the View button */
+.product-card .view-btn,
+.products-grid .view,
+.product-card .btn-primary,
+.products-grid .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.product-card .view-btn:hover,
+.products-grid .view:hover,
+.product-card .btn-primary:hover,
+.products-grid .btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Fix width issues for buttons in product cards */
+.product-card .product-actions,
+.products-grid .product-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.product-card .product-actions a,
+.products-grid .product-actions a,
+.product-card .product-actions button,
+.products-grid .product-actions button {
+    flex: 1;
+    text-align: center;
+    min-width: auto;
+    max-width: none;
+    margin: 0 4px;
+}
+
+/* Make sure buttons aren't stretched */
+.products-grid .view {
+    width: auto;
+    display: inline-flex;
+}
+
+/* Include modal's button styles as well since it's used across seller pages */
+.modal .btn-success {
+    background-color: #4caf50;
+    color: white;
+}
+
+.modal .btn-success:hover {
+    background-color: #388e3c;
+    transform: translateY(-2px);
+}
+
+
  
  /* Utility Classes */
  .text-danger {

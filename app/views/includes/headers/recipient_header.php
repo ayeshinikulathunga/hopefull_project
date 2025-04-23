@@ -60,7 +60,7 @@
             </div>
             
             <div class="nav-links">
-                <a href="<?php echo URLROOT; ?>">Home</a>
+                <a href="<?php echo URLROOT; ?>/recipinets/dashboard">Home</a>
                 <a href="<?php echo URLROOT; ?>/recipients/requests">My Requests</a>
                 <a href="<?php echo URLROOT; ?>/about">About</a>
                 

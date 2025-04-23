@@ -36,7 +36,7 @@
                         </div>
                     </div>
                     
-                    <div class="mp-checkout__section">
+                    <<div class="mp-checkout__section">
                         <h2>Shipping Address</h2>
                         <div class="form-group">
                             <label for="street_address">Street Address<span class="required">*</span></label>
@@ -90,61 +90,58 @@
                     </div>
                     
                     <div class="mp-checkout__section">
-                        <h2>Payment Method</h2>
-                        <div class="form-group">
-                            <div class="mp-checkout__payment-options <?php echo (!empty($data['payment_method_err'])) ? 'is-invalid' : ''; ?>">
-                                <!-- PayHere Payment Option -->
-                                <div class="mp-checkout__payment-option">
-                                    <input type="radio" id="payhere" name="payment_method" value="payhere" <?php echo ($data['payment_method'] == 'payhere') ? 'checked' : ''; ?>>
-                                    <label for="payhere">
-                                        <i class="fas fa-credit-card"></i>
-                                        Pay with PayHere (Credit/Debit Cards, Mobile Wallets)
-                                    </label>
-                                </div>
-                                
-                                <div class="mp-checkout__payment-option">
-                                    <input type="radio" id="cash_on_delivery" name="payment_method" value="cash_on_delivery" <?php echo ($data['payment_method'] == 'cash_on_delivery' || empty($data['payment_method'])) ? 'checked' : ''; ?>>
-                                    <label for="cash_on_delivery">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                        Cash on Delivery
-                                    </label>
-                                </div>
-                                
-                                <div class="mp-checkout__payment-option">
-                                    <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" <?php echo ($data['payment_method'] == 'bank_transfer') ? 'checked' : ''; ?>>
-                                    <label for="bank_transfer">
-                                        <i class="fas fa-university"></i>
-                                        Bank Transfer
-                                    </label>
-                                </div>
-                            </div>
-                            <span class="invalid-feedback"><?php echo $data['payment_method_err']; ?></span>
-                            
-                            <!-- Bank transfer receipt upload section - shows only when bank_transfer is selected -->
-                            <div id="bank_transfer_section" class="mt-3" style="display: <?php echo ($data['payment_method'] == 'bank_transfer') ? 'block' : 'none'; ?>;">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Bank Transfer Details</h5>
-                                        <p class="card-text">Please transfer the total amount to the following bank account:</p>
-                                        <div class="bank-details">
-                                            <p><strong>Bank Name:</strong> Sample Bank</p>
-                                            <p><strong>Account Name:</strong> Hopefull Organization</p>
-                                            <p><strong>Account Number:</strong> 1234567890</p>
-                                            <p><strong>Branch:</strong> Main Branch</p>
-                                            <p><strong>Reference:</strong> Your Name + Phone Number</p>
-                                        </div>
-                                        
-                                        <div class="form-group mt-3">
-                                            <label for="bank_receipt">Upload Receipt<span class="required">*</span></label>
-                                            <input type="file" id="bank_receipt" name="bank_receipt" class="form-control-file <?php echo (!empty($data['bank_receipt_err'])) ? 'is-invalid' : ''; ?>">
-                                            <small>Please upload a screenshot or photo of your payment receipt</small>
-                                            <span class="invalid-feedback"><?php echo $data['bank_receipt_err'] ?? ''; ?></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <h2>Payment Method</h2>
+    <div class="form-group">
+        <div class="mp-checkout__payment-options <?php echo (!empty($data['payment_method_err'])) ? 'is-invalid' : ''; ?>">
+            <!-- PayHere Payment Option -->
+            <div class="mp-checkout__payment-option">
+                <input type="radio" id="payhere" name="payment_method" value="payhere" <?php echo ($data['payment_method'] == 'payhere') ? 'checked' : ''; ?>>
+                <label for="payhere">
+                    <i class="fas fa-credit-card"></i>
+                    Pay with PayHere (Credit/Debit Cards, Mobile Wallets)
+                </label>
+            </div>
+            
+            <div class="mp-checkout__payment-option">
+                <input type="radio" id="cash_on_delivery" name="payment_method" value="cash_on_delivery" <?php echo ($data['payment_method'] == 'cash_on_delivery' || empty($data['payment_method'])) ? 'checked' : ''; ?>>
+                <label for="cash_on_delivery">
+                    <i class="fas fa-money-bill-wave"></i>
+                    Cash on Delivery
+                </label>
+            </div>
+            
+            <div class="mp-checkout__payment-option">
+                <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" <?php echo ($data['payment_method'] == 'bank_transfer') ? 'checked' : ''; ?>>
+                <label for="bank_transfer">
+                    <i class="fas fa-university"></i>
+                    Bank Transfer
+                </label>
+            </div>
+        </div>
+        <span class="invalid-feedback"><?php echo $data['payment_method_err']; ?></span>
+        
+        <!-- PayHere information section -->
+        <div id="payhere_section" class="mt-3" style="display: <?php echo ($data['payment_method'] == 'payhere') ? 'block' : 'none'; ?>;">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Secure Online Payment</h5>
+                    <p class="card-text">You will be redirected to PayHere to complete your payment securely. PayHere accepts:</p>
+                    <div class="payment-methods-icons">
+                        <img src="<?php echo URLROOT; ?>/images/visa.png" alt="Visa">
+                        <img src="<?php echo URLROOT; ?>/images/mastercard.png" alt="Mastercard">
+                        <img src="<?php echo URLROOT; ?>/images/amex.png" alt="American Express">
+                        <img src="<?php echo URLROOT; ?>/images/payhere.png" alt="PayHere">
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bank transfer receipt upload section -->
+        <div id="bank_transfer_section" class="mt-3" style="display: <?php echo ($data['payment_method'] == 'bank_transfer') ? 'block' : 'none'; ?>;">
+            <!-- Your existing bank transfer section -->
+        </div>
+    </div>
+</div>
                     
                     <div class="mp-checkout__section mp-checkout__terms">
                         <div class="mp-checkout__terms-agreement">
@@ -210,30 +207,37 @@
     </div>
 </section>
 
-<script>
+
+   <script>
     // Script to combine the address fields into the hidden shipping_address field before form submission
     document.addEventListener('DOMContentLoaded', function() {
         const checkoutForm = document.querySelector('.mp-checkout__form form');
         
-        // Handle bank transfer section visibility
+        // Handle payment section visibility
         const bankTransferRadio = document.getElementById('bank_transfer');
         const payhereRadio = document.getElementById('payhere');
         const cashOnDeliveryRadio = document.getElementById('cash_on_delivery');
         const bankTransferSection = document.getElementById('bank_transfer_section');
+        const payhereSection = document.getElementById('payhere_section');
         
-        // Function to toggle bank transfer section
-        function toggleBankTransferSection() {
+        // Function to toggle payment sections
+        function togglePaymentSections() {
             if (bankTransferRadio.checked) {
                 bankTransferSection.style.display = 'block';
+                payhereSection.style.display = 'none';
+            } else if (payhereRadio.checked) {
+                bankTransferSection.style.display = 'none';
+                payhereSection.style.display = 'block';
             } else {
                 bankTransferSection.style.display = 'none';
+                payhereSection.style.display = 'none';
             }
         }
         
         // Add event listeners to payment method radio buttons
-        bankTransferRadio.addEventListener('change', toggleBankTransferSection);
-        payhereRadio.addEventListener('change', toggleBankTransferSection);
-        cashOnDeliveryRadio.addEventListener('change', toggleBankTransferSection);
+        bankTransferRadio.addEventListener('change', togglePaymentSections);
+        payhereRadio.addEventListener('change', togglePaymentSections);
+        cashOnDeliveryRadio.addEventListener('change', togglePaymentSections);
         
         checkoutForm.addEventListener('submit', function(e) {
             // Validate bank receipt upload if bank transfer is selected
@@ -277,6 +281,7 @@
         });
     });
 </script>
+
 
 <style>
     /* PayHere payment method styling */

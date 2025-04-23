@@ -94,7 +94,7 @@
                         <div class="product-actions">
                             <a href="<?php echo URLROOT; ?>/sellers/editProduct/<?php echo $product->ProductID; ?>" class="btn-sm btn-secondary">Edit</a>
                             <button class="btn-sm btn-danger delete-product-btn" data-product-id="<?php echo $product->ProductID; ?>" data-product-name="<?php echo $product->ProductName; ?>">Delete</button>
-                            <a href="<?php echo URLROOT; ?>/marketplace/product/<?php echo $product->ProductID; ?>" class="btn-sm btn-primary" target="_blank">View</a>
+                            <a href="<?php echo URLROOT; ?>/marketplace/product/<?php echo $product->ProductID; ?>" class="btn-sm btn-primary view-btn" target="_blank">View</a>
                         </div>
                     </div>
                 </div>

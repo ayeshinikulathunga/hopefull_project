@@ -485,7 +485,7 @@ public function cancelDonation() {
         redirect('donations/myDonations');
     } else {
         // For other pages, redirect back to the same page
-        redirect('donations/' . $redirectPage);
+        redirect('donations/myDonations' . $redirectPage);
     }
 }
 

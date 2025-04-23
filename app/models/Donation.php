@@ -237,7 +237,7 @@ public function getNonMonetaryItemDetails($requestId) {
 
 
 
-public function cancelDonation($donationId, $reason) {
+/*public function cancelDonation($donationId, $reason) {
     $this->db->beginTransaction();
     
     try {
@@ -302,6 +302,100 @@ public function cancelDonation($donationId, $reason) {
         
     } catch (Exception $e) {
         $this->db->rollBack();
+        error_log("Donation Cancellation Error: " . $e->getMessage());
+        return false;
+    }
+}*/
+
+public function cancelDonation($donationId, $reason) {
+    // First check if a transaction is already active
+    $isTransactionActive = false;
+    try {
+        // Check if there's already an active transaction
+        $this->db->query('SELECT @@autocommit');
+        $autocommit = $this->db->single();
+        $isTransactionActive = $autocommit && $autocommit->{'@@autocommit'} == 0;
+        
+        // Only begin a transaction if one is not already active
+        if (!$isTransactionActive) {
+            $this->db->beginTransaction();
+        }
+        
+        // Get donation details before updating status
+        $this->db->query('SELECT * FROM donations WHERE DonationID = :donationId');
+        $this->db->bind(':donationId', $donationId);
+        $donation = $this->db->single();
+        
+        if (!$donation) {
+            if (!$isTransactionActive) {
+                $this->db->rollBack();
+            }
+            return false;
+        }
+        
+        // Update donation status
+        $this->db->query('UPDATE donations 
+                         SET Status = "Cancelled" 
+                         WHERE DonationID = :donationId AND Status = "Pending"');
+        
+        $this->db->bind(':donationId', $donationId);
+        $result = $this->db->execute();
+        
+        // For non-monetary donations, update the quantity received in the request details
+        if ($donation && $donation->DonationType == 'NonMonetary') {
+            // Update the quantity received in nonmonetary_donation_details
+            $this->db->query('UPDATE nonmonetary_donation_details 
+                             SET QuantityReceived = QuantityReceived - :quantity 
+                             WHERE RequestID = :requestId');
+            
+            $this->db->bind(':quantity', $donation->QuantityDonated);
+            $this->db->bind(':requestId', $donation->RequestID);
+            
+            $this->db->execute();
+        }
+        
+        // Store cancellation information
+        $this->db->query("CREATE TABLE IF NOT EXISTS `donation_cancellations` (
+            `ID` int(11) NOT NULL AUTO_INCREMENT,
+            `DonationID` varchar(10) NOT NULL,
+            `CancellationReason` text NOT NULL,
+            `CancellationDate` datetime DEFAULT current_timestamp(),
+            PRIMARY KEY (`ID`),
+            KEY `DonationID` (`DonationID`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+        
+        $this->db->execute();
+        
+        // Insert into the cancellation log
+        $this->db->query('INSERT INTO donation_cancellations (DonationID, CancellationReason) 
+                         VALUES (:donationId, :reason)');
+        $this->db->bind(':donationId', $donationId);
+        $this->db->bind(':reason', $reason);
+        $this->db->execute();
+        
+        // Commit transaction if successful
+        if ($result) {
+            if (!$isTransactionActive) {
+                $this->db->commit();
+            }
+            return true;
+        } else {
+            if (!$isTransactionActive) {
+                $this->db->rollBack();
+            }
+            return false;
+        }
+        
+    } catch (Exception $e) {
+        if (!$isTransactionActive) {
+            // Only rollback if we started the transaction
+            try {
+                $this->db->rollBack();
+            } catch (PDOException $pdoEx) {
+                // Log rollback failure but don't throw another exception
+                error_log("Rollback failed: " . $pdoEx->getMessage());
+            }
+        }
         error_log("Donation Cancellation Error: " . $e->getMessage());
         return false;
     }
