@@ -21,7 +21,7 @@
                     <td><?php echo htmlspecialchars($request->Email); ?></td>
                     <td>
                         <?php if (!empty($request->DocumentationURL)): ?>
-                            <a href="<?php echo URLROOT . '/uploads/documents/' . htmlspecialchars($request->DocumentationURL); ?>" target="_blank" class="btn btn-sm btn-info">View Document</a>
+                            <a href="<?php echo URLROOT . '/uploads/documents/' . htmlspecialchars($request->DocumentationURL); ?>" target="_blank" class="btn btn-sm btn-primary">View Document</a>
                         <?php else: ?>
                             No Document
                         <?php endif; ?>
