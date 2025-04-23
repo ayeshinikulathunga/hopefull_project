@@ -1,3 +1,4 @@
+
 <?php require APPROOT . '/views/includes/headers/officer_header.php'; ?>
 
 <div class="dashboard-container">
@@ -63,7 +64,8 @@
                 <p>Pending Requests</p>
             </div>
             <?php if(count($data['pendingRequests']) > 0): ?>
-                <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="card-action">View Requests</a>
+                <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="btn btn-primary btn-sm">View Requests</a>
+
             <?php endif; ?>
         </div>
     </div>
@@ -82,14 +84,14 @@
         <div class="dashboard-card">
             <div class="card-header-with-action">
                 <h3>Recent Inventory Items</h3>
-                <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory" class="btn btn-sm btn-success">Manage Inventory</a>
+                <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory" class="btn btn-primary btn-sm">Manage Inventory</a>
             </div>
             
             <?php if(empty($data['inventoryItems'])): ?>
                 <div class="empty-state">
                     <i class="fas fa-boxes"></i>
                     <p>No inventory items added yet</p>
-                    <a href="<?php echo URLROOT; ?>/regionalOfficers/addItem" class="btn btn-sm btn-success">Add First Item</a>
+                    <a href="<?php echo URLROOT; ?>/regionalOfficers/addItem" class="btn btn-primary btn-sm">Add First Item</a>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
@@ -119,7 +121,8 @@
                     </table>
                     <?php if(count($data['inventoryItems']) > 5): ?>
                         <div class="see-all">
-                            <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory">See All Items</a>
+                            <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory" class="btn btn-primary btn-sm">See All Items</a>
+                            
                         </div>
                     <?php endif; ?>
                 </div>
@@ -131,9 +134,51 @@
     <div class="dashboard-card">
         <div class="card-header-with-action">
             <h3>Pending Donation Requests</h3>
-            <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="btn btn-sm btn-success">View All</a>
+            <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="btn btn-primary btn-sm">View All</a>
         </div>
         
+        <?php if(empty($data['pendingRequests'])): ?>
+            <div class="empty-state">
+                <i class="fas fa-clipboard-check"></i>
+                <p>No pending donation requests</p>
+            </div>
+        <?php else: ?>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Recipient</th>
+                            <th>Item</th>
+                            <th>Quantity Needed</th>
+                            <th>Quantity Received</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach(array_slice($data['pendingRequests'], 0, 5) as $request): ?>
+                            <tr>
+                                <td><?php echo $request->Title; ?></td>
+                                <td><?php echo $request->FirstName . ' ' . $request->LastName; ?></td>
+                                <td><?php echo $request->ItemName; ?></td>
+                                <td><?php echo $request->QuantityNeeded; ?></td>
+                                <td><?php echo $request->QuantityReceived; ?></td>
+                                <td>
+                                    <?php 
+                                        $progress = ($request->QuantityNeeded > 0) ? 
+                                            round(($request->QuantityReceived / $request->QuantityNeeded) * 100) : 0;
+                                    ?>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: <?php echo $progress; ?>%"></div>
+                                    </div>
+                                    <span class="progress-text"><?php echo $progress; ?>%</span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
