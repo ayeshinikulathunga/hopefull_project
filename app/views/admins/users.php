@@ -43,14 +43,12 @@
                                     <td><?php echo $user->Email; ?></td>
                                     <td><?php echo $user->Username; ?></td>
                                     <td><?php echo $user->UserType; ?></td>
-                                    <td>
-                                        <span class="badge badge-success"><?php 
-                                            echo $user->UserStatus == 'Active' ? 'success' : 
-                                                ($user->UserStatus == 'Banned' ? 'danger' : 'warning'); 
-                                        ?>">
-                                            <?php echo $user->UserStatus ?? 'Active'; ?>
-                                        </span>
-                                    </td>
+                                    <td class="<?php 
+    echo $user->UserStatus == 'Active' ? 'badge-success' : 
+        ($user->UserStatus == 'Banned' ? 'badge-danger' : 'badge-warning'); 
+?>">
+    <?php echo $user->UserStatus ?? 'Active'; ?>
+</td>
                                     <td>
                                         <div class="btn-group">
                                         <button type="button" class="btn btn-sm btn-info edit-user-btn" 
@@ -58,13 +56,12 @@
     data-email="<?php echo $user->Email; ?>" 
     data-username="<?php echo $user->Username; ?>" 
     data-usertype="<?php echo $user->UserType; ?>" 
-    data-userstatus="<?php echo $user->UserStatus ?? 'Active'; ?>" 
+    data-userstatus="<?php echo $user->UserStatus ?? 'Active'; ?>"
     onclick="window.location.href='<?php echo URLROOT; ?>/admins/editUser/<?php echo $user->UserID; ?>'">
     Edit
 </button>
 
 
-                                            
                                             <?php if(($user->UserStatus ?? 'Active') == 'Active'): ?>
                                                 <form action="<?php echo URLROOT; ?>/admins/update_user_status" method="POST" class="d-inline">
                                                     <input type="hidden" name="user_id" value="<?php echo $user->UserID; ?>">
