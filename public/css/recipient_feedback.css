@@ -1,0 +1,123 @@
+/* 
+ * Feedback Management Stylesheet for Hopefull
+ * This stylesheet contains styles for impact updates and feedback reporting
+ */
+
+ @import 'variables.css';
+ @import 'requests.css';  /* Inherit most styles from requests */
+ 
+ /* Impact Update Specific Styles */
+ .send-impact-update-container {
+     margin-top: 60px;
+     margin-bottom: 20px;
+ }
+ 
+ .donor-impact-section {
+     background-color: var(--background-light);
+     border-radius: var(--border-radius-md);
+     margin-bottom: 1.5rem;
+     padding: 1.5rem;
+     transition: background-color 0.3s ease;
+ }
+ 
+ .donor-impact-section:hover {
+     background-color: rgba(0, 0, 0, 0.02);
+ }
+ 
+ .donor-info {
+     display: flex;
+     align-items: center;
+     margin-bottom: 1rem;
+     padding-bottom: 1rem;
+     border-bottom: 1px solid #e0e0e0;
+ }
+ 
+ .donation-checkbox {
+     margin-right: 1rem;
+     width: 20px;
+     height: 20px;
+ }
+ 
+ .donor-label {
+     flex-grow: 1;
+     display: flex;
+     flex-direction: column;
+     cursor: pointer;
+ }
+ 
+ .donor-name {
+     font-weight: var(--font-bold);
+     color: var(--text-dark);
+     margin-bottom: 0.25rem;
+ }
+ 
+ .donation-details {
+     font-size: var(--font-sm);
+     color: var(--text-light);
+ }
+ 
+ .donor-update-details {
+     transition: all 0.3s ease;
+     overflow: hidden;
+ }
+ 
+ .donor-update-details.hidden {
+     max-height: 0;
+     opacity: 0;
+     padding: 0;
+     margin: 0;
+ }
+ 
+ .image-preview {
+     margin-top: 1rem;
+ }
+ 
+ .preview-container {
+     width: 100%;
+     height: 250px;
+     border: 2px dashed #e0e0e0;
+     border-radius: var(--border-radius-sm);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     overflow: hidden;
+ }
+ 
+ .no-preview {
+     text-align: center;
+     color: var(--text-light);
+ }
+ 
+ .no-preview i {
+     font-size: 3rem;
+     margin-bottom: 1rem;
+     opacity: 0.5;
+ }
+ 
+ .preview-image {
+     max-width: 100%;
+     max-height: 100%;
+     object-fit: contain;
+ }
+ 
+ /* Responsive Adjustments */
+ @media (max-width: 768px) {
+     .donor-info {
+         flex-direction: column;
+         align-items: flex-start;
+     }
+ 
+     .donation-checkbox {
+         margin-bottom: 0.5rem;
+     }
+ }
+ 
+ /* Animations */
+ @keyframes fadeIn {
+     from { opacity: 0; }
+     to { opacity: 1; }
+ }
+ 
+ .donor-update-details {
+     animation: fadeIn 0.3s ease;
+ }

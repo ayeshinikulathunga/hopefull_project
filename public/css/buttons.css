@@ -1,0 +1,122 @@
+/* Button Container Styles */
+.btn-container {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+/* Base Button Style */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--font-medium);
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: var(--font-base);
+    align-items: center
+   
+}
+
+
+/* Outline Button */
+.btn-outline {
+    display: inline-block;
+    padding: 0.6rem 1.5rem;
+    background-color: transparent;
+    color: #183e6f;
+    border: 2px solid #183e6f;
+    border-radius: 40px;
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
+    margin: 0 0.5rem;
+  }
+  
+  .btn-outline:hover {
+    background-color: rgba(192, 218, 255, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  
+  
+  .btn:hover {
+    background-color: #132f55;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  }
+
+
+
+/* Primary Button */
+.btn-primary {
+    background-color: var(--primary);
+    color: var(--text-white);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: transparent;
+    color: var(--text-white);
+    border: 1px solid var(--primary-lighter);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-sm); 
+}
+
+/* Secondary Button */
+.btn-secondary {
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 500;
+    background-color: var(--text-white);
+    color: var(--primary-dark);
+    border: none;
+    width: 180px;
+}
+
+.btn-secondary:hover {
+    background-color: transparent;
+    color: var(--text-white);
+    border: 1px solid var(--text-white);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-sm);
+}
+
+
+
+/* Button sizes */
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: var(--font-sm);
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: var(--font-lg);
+}
+
+/* Full width button */
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.btn-blockx {
+    display: block;
+    width: 50%;
+}
+
+/* Disabled state */
+.btn-disabled,
+.btn-disabled:hover {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
