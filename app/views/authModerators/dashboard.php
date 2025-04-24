@@ -17,6 +17,7 @@
         </div>
         
         <div class="dashboard-card">
+<<<<<<< HEAD
     <div class="card-icon">
         <i class="fas fa-clipboard-check"></i>
     </div>
@@ -30,6 +31,19 @@
 </div>
 
 
+=======
+            <div class="card-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="card-content">
+                <h3><?php echo $data['stats']->pendingRequests; ?></h3>
+                <p>Pending Requests</p>
+            </div>
+            <?php if($data['stats']->pendingRequests > 0): ?>
+                <a href="<?php echo URLROOT; ?>/authModerators/manageRequests" class="card-action">Verify Now</a>
+            <?php endif; ?>
+        </div>
+>>>>>>> 001ced858a913f2c3475a22ded8448a6dd3a1b72
         
         <div class="dashboard-card">
             <div class="card-icon">
@@ -37,11 +51,28 @@
             </div>
             <div class="card-content">
                 <h3><?php echo $data['stats']->approvedRecipients + $data['stats']->approvedRequests; ?></h3>
+<<<<<<< HEAD
                 <p>Approved Recipients Total</p>
             </div>
         </div>
         
        
+=======
+                <p>Total Approved</p>
+            </div>
+        </div>
+        
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="card-content">
+                <h3><?php echo $data['moderator']->VerificationCount; ?></h3>
+                <p>Your Verifications</p>
+            </div>
+        </div>
+    </div>
+>>>>>>> 001ced858a913f2c3475a22ded8448a6dd3a1b72
     
     <!-- Charts & Tables Row -->
     <div class="dashboard-grid">
@@ -79,7 +110,11 @@
                                     <td><?php echo $recipient->OrganizationType; ?></td>
                                     <td><?php echo date('M d, Y', strtotime($recipient->RegisteredDate)); ?></td>
                                     <td>
+<<<<<<< HEAD
                                         <a href="<?php echo URLROOT; ?>/authModerators/manageRecipients" class="btn btn-sm btn-primary">
+=======
+                                        <a href="<?php echo URLROOT; ?>/authModerators/viewRecipient/<?php echo $recipient->RecipientID; ?>" class="btn-sm btn-outline">
+>>>>>>> 001ced858a913f2c3475a22ded8448a6dd3a1b72
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>

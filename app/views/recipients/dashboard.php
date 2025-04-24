@@ -9,7 +9,7 @@
     <div class="hero-content container">
         <h1>Welcome, <?php echo $data['recipient']->FirstName; ?></h1>
         <p>Your dashboard for monitoring donation requests and impact</p>
-        <a href="<?php echo URLROOT; ?>/recipients/requests" class="btn btn-primary">Create New Request</a>
+        <a href="<?php echo URLROOT; ?>/recipients/requests" class="btn btn-primary"> New Request</a>
     </div>
 </div>
 

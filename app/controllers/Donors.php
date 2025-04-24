@@ -205,6 +205,107 @@ public function allRequests() {
 }
 
 
+/**
+ * View all feedback reports for this donor
+ * @return void
+ */
+public function feedback() {
+    // Initialize Feedback model
+    $feedbackModel = $this->model('Feedback');
+    
+    // Get page number for pagination
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    if ($page < 1) $page = 1;
+    $perPage = 10; // Number of feedback items per page
+    $offset = ($page - 1) * $perPage;
+    
+    // Get feedback with pagination
+    $feedback = $this->donationModel->getFeedbackForDonor($_SESSION['donor_id']);
+    
+    // Count total feedback for pagination
+    $feedbackStats = $feedbackModel->getDonorFeedbackStats($_SESSION['donor_id']);
+    $totalFeedback = $feedbackStats->TotalFeedback;
+    $totalPages = ceil($totalFeedback / $perPage);
+    
+    // Get donor's feedback statistics for summary display
+    $donorStats = $this->donorModel->getDonorStats($_SESSION['donor_id']);
+    
+    $data = [
+        'title' => 'Recipient Feedback',
+        'feedback' => $feedback,
+        'currentPage' => $page,
+        'totalPages' => $totalPages,
+        'totalFeedback' => $totalFeedback,
+        'feedbackStats' => $feedbackStats,
+        'donorStats' => $donorStats
+    ];
+    
+    $this->view('donors/feedback', $data);
+}
+
+/**
+ * View specific feedback details
+ * @param string $feedbackId The feedback ID
+ * @return void
+ */
+public function viewFeedback($feedbackId = null) {
+    // Check if feedback ID is provided
+    if (!$feedbackId) {
+        flash('feedback_error', 'Invalid feedback report', 'alert alert-danger');
+        redirect('donors/feedback');
+        return;
+    }
+    
+    // Initialize Feedback model
+    $feedbackModel = $this->model('Feedback');
+    
+    // Get feedback details
+    $feedback = $this->donationModel->getFeedbackDetails($feedbackId, $_SESSION['donor_id']);
+    
+    // Check if feedback exists and belongs to this donor
+    if (!$feedback) {
+        flash('feedback_error', 'Feedback report not found or access denied', 'alert alert-danger');
+        redirect('donors/feedback');
+        return;
+    }
+    
+    // Mark feedback as read
+    $this->donationModel->markFeedbackAsRead($feedbackId, $_SESSION['donor_id']);
+    
+    // Prepare data for view
+    $data = [
+        'title' => 'Feedback Details',
+        'feedback' => $feedback
+    ];
+    
+    $this->view('donors/view_feedback', $data);
+}
+
+/**
+ * Mark all feedback as read
+ * @return void
+ */
+public function markAllFeedbackAsRead() {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Get all unread feedback for this donor
+        $this->db->query('UPDATE feedback_reports fr
+                         JOIN donations d ON fr.DonationID = d.DonationID
+                         SET fr.ViewedByDonor = 1
+                         WHERE d.DonorID = :donorId AND fr.ViewedByDonor = 0');
+        
+        $this->db->bind(':donorId', $_SESSION['donor_id']);
+        
+        if ($this->db->execute()) {
+            flash('feedback_message', 'All feedback marked as read');
+        } else {
+            flash('feedback_error', 'Failed to update feedback status', 'alert alert-danger');
+        }
+    }
+    
+    redirect('donors/feedback');
+}
+
+
 
 
 }

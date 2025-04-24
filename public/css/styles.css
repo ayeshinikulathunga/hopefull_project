@@ -9,6 +9,7 @@
 @import 'admin.css';
 @import 'marketplace.css';
 @import 'marketplace_header.css';
+@import'cancel.css';
 /* Global styles */
 html {
     scroll-behavior: smooth;

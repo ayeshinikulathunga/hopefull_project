@@ -2,6 +2,8 @@
 
 <div class="seller-order-details">
     <?php flash('order_message'); ?>
+    <?php flash('cancellation_message'); ?>
+    <?php flash('cancellation_error'); ?>
     
     <div class="order-header">
         <div class="back-link">
@@ -53,6 +55,71 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Cancellation Request Information (if exists) -->
+        <?php if(isset($data['cancellation_request']) && $data['cancellation_request']): ?>
+        <div class="info-card cancellation-info-card">
+            <h3>
+                <i class="fas fa-times-circle"></i> Cancellation Request
+                <span class="status-badge status-<?php echo strtolower($data['cancellation_request']->Status); ?>">
+                    <?php echo $data['cancellation_request']->Status; ?>
+                </span>
+            </h3>
+            <div class="info-content">
+                <div class="info-row">
+                    <div class="info-label">Request ID:</div>
+                    <div class="info-value"><?php echo $data['cancellation_request']->CancellationID; ?></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Requested By:</div>
+                    <div class="info-value"><?php echo $data['cancellation_request']->Username; ?></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Request Date:</div>
+                    <div class="info-value"><?php echo date('F j, Y - g:i A', strtotime($data['cancellation_request']->RequestDate)); ?></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Reason:</div>
+                    <div class="info-value"><?php echo $data['cancellation_request']->Reason; ?></div>
+                </div>
+                
+                <?php if($data['cancellation_request']->Status !== 'Pending'): ?>
+                    <div class="info-row">
+                        <div class="info-label">Processed Date:</div>
+                        <div class="info-value"><?php echo date('F j, Y - g:i A', strtotime($data['cancellation_request']->ProcessedDate)); ?></div>
+                    </div>
+                    <?php if(!empty($data['cancellation_request']->Notes)): ?>
+                        <div class="info-row">
+                            <div class="info-label">Notes:</div>
+                            <div class="info-value"><?php echo $data['cancellation_request']->Notes; ?></div>
+                        </div>
+                    <?php endif; ?>
+                <?php elseif(isset($data['cancellation_allowed']) && $data['cancellation_allowed']): ?>
+                    <div class="cancellation-actions">
+                        <button class="btn btn-success process-btn" 
+                                data-cancellation-id="<?php echo $data['cancellation_request']->CancellationID; ?>"
+                                data-order-id="<?php echo $data['order']->OrderID; ?>"
+                                data-action="approve">
+                            <i class="fas fa-check"></i> Approve Cancellation
+                        </button>
+                        <button class="btn btn-danger process-btn" 
+                                data-cancellation-id="<?php echo $data['cancellation_request']->CancellationID; ?>"
+                                data-order-id="<?php echo $data['order']->OrderID; ?>"
+                                data-action="reject">
+                            <i class="fas fa-times"></i> Reject Cancellation
+                        </button>
+                    </div>
+                <?php else: ?>
+                    <div class="info-row">
+                        <div class="info-value text-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            This order is already <?php echo $data['order']->Status; ?> and cannot be cancelled.
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
         
         <!-- Shipping Information -->
         <div class="info-card">
@@ -224,6 +291,29 @@
             </form>
         </div>
     </div>
+    
+    <!-- Process Cancellation Modal -->
+    <div id="processCancellationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Process Cancellation Request</h2>
+            <form id="processCancellationForm" action="<?php echo URLROOT; ?>/sellers/processCancellation" method="POST">
+                <input type="hidden" id="cancellationIdInput" name="cancellation_id">
+                <input type="hidden" id="orderIdCancellationInput" name="order_id">
+                <input type="hidden" id="statusInput" name="status">
+                
+                <div class="form-group">
+                    <label for="notesInput">Notes (optional):</label>
+                    <textarea id="notesInput" name="notes" class="form-control" rows="3" placeholder="Add any additional notes about this decision..."></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="confirmBtn">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -267,6 +357,52 @@
         addTrackingModal.style.display = 'none';
     });
     
+    // Process cancellation modal functionality
+    const processCancellationModal = document.getElementById('processCancellationModal');
+    const processBtns = document.querySelectorAll('.process-btn');
+    const modalTitle = document.getElementById('modalTitle');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const processCancellationCloseBtn = processCancellationModal.querySelector('.close');
+    const cancelCancellationBtn = processCancellationModal.querySelector('.cancel-btn');
+    
+    if (processBtns.length > 0) {
+        // Open modal with correct title and action when process button is clicked
+        processBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const cancellationId = this.getAttribute('data-cancellation-id');
+                const orderId = this.getAttribute('data-order-id');
+                const action = this.getAttribute('data-action');
+                
+                document.getElementById('cancellationIdInput').value = cancellationId;
+                document.getElementById('orderIdCancellationInput').value = orderId;
+                
+                if (action === 'approve') {
+                    modalTitle.textContent = 'Approve Cancellation Request';
+                    confirmBtn.textContent = 'Approve Cancellation';
+                    confirmBtn.className = 'btn btn-success';
+                    document.getElementById('statusInput').value = 'Approved';
+                } else {
+                    modalTitle.textContent = 'Reject Cancellation Request';
+                    confirmBtn.textContent = 'Reject Cancellation';
+                    confirmBtn.className = 'btn btn-danger';
+                    document.getElementById('statusInput').value = 'Rejected';
+                }
+                
+                processCancellationModal.style.display = 'block';
+            });
+        });
+        
+        // Close modal when close button is clicked
+        processCancellationCloseBtn.addEventListener('click', function() {
+            processCancellationModal.style.display = 'none';
+        });
+        
+        // Close modal when cancel button is clicked
+        cancelCancellationBtn.addEventListener('click', function() {
+            processCancellationModal.style.display = 'none';
+        });
+    }
+    
     // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target == updateStatusModal) {
@@ -274,6 +410,9 @@
         }
         if (event.target == addTrackingModal) {
             addTrackingModal.style.display = 'none';
+        }
+        if (event.target == processCancellationModal) {
+            processCancellationModal.style.display = 'none';
         }
     });
 </script>
