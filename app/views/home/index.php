@@ -86,6 +86,59 @@
     </div>
 </section>
 
+
+<section class="inquiries">
+    <div class="container">
+        <h2 class="section-title">Contact Us</h2>
+        <p class="inquiries-intro">Have questions or want to learn more? Fill out the form below and we'll get back to you as soon as possible.</p>
+        
+        <?php if (isset($_GET['error'])): ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['success'])): ?>
+            <div class="alert alert-success">
+                <?php echo htmlspecialchars($_GET['success']); ?>
+            </div>
+        <?php endif; ?>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="form-container">
+                    <form action="<?php echo URLROOT; ?>/visitorInquiries/submit" method="POST" id="inquiryForm">
+                        <div class="form-group mb-3">
+                            <label for="name">Your Name <span class="text-danger">*</span></label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="email">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="phone">Phone Number</label>
+                            <input type="text" id="phone" name="phone" class="form-control">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="subject">Subject <span class="text-danger">*</span></label>
+                            <input type="text" id="subject" name="subject" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="message">Your Message <span class="text-danger">*</span></label>
+                            <textarea id="message" name="message" rows="5" class="form-control" required></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-submit">Submit Inquiry</button>
+                        </div>
+                    </form>
+                    <br/>
+                    <p class="inquiries-intro">You will get an email within 1-3 business days. Make sure to check!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 <?php require APPROOT . '/views/includes/footer.php'; ?>
 
 <!-- Slideshow JavaScript -->
