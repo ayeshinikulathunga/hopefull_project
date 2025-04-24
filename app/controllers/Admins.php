@@ -2,6 +2,7 @@
 class Admins extends Controller {
     private $adminModel;
     private $userModel;
+    private $adminInquiryModel;
     
     public function __construct() {
         // Start session if not already started
@@ -23,6 +24,7 @@ class Admins extends Controller {
         
         $this->adminModel = $this->model('Admin');
         $this->userModel = $this->model('User');
+        $this->adminInquiryModel = $this->model('AdminInquiry');
     }
     
     public function index() {
@@ -37,7 +39,12 @@ class Admins extends Controller {
             'title' => 'Admin Dashboard',
             'user_counts' => $this->adminModel->getUserCounts(),
             'recent_users' => $this->adminModel->getRecentUsers(),
-            'pending_verifications' => $this->adminModel->getPendingVerifications()
+            'pending_verifications' => $this->adminModel->getPendingVerifications(),
+            // Add inquiry data for dashboard
+            'inquiries' => $this->adminInquiryModel->getRecentInquiries(5),
+            'new_inquiries' => $this->adminInquiryModel->countInquiriesByStatus('New'),
+            'in_progress_inquiries' => $this->adminInquiryModel->countInquiriesByStatus('In Progress'),
+            'total_inquiries' => $this->adminInquiryModel->countInquiriesByStatus()
         ];
         
         $this->view('admins/dashboard', $data);
@@ -269,6 +276,155 @@ class Admins extends Controller {
         } else {
             // Redirect to verifications page if not POST
             header('Location: ' . URLROOT . '/admins/verifications');
+            exit;
+        }
+    }
+
+    // START OF NEW INQUIRY FUNCTIONS
+    
+    /**
+     * Display a list of all inquiries
+     */
+    public function inquiries() {
+        $data = [
+            'title' => 'Manage Inquiries',
+            'inquiries' => $this->adminInquiryModel->getInquiries(),
+            'new_count' => $this->adminInquiryModel->countInquiriesByStatus('New'),
+            'in_progress_count' => $this->adminInquiryModel->countInquiriesByStatus('In Progress'),
+            'completed_count' => $this->adminInquiryModel->countInquiriesByStatus('Completed')
+        ];
+        
+        $this->view('admins/inquiries/index', $data);
+    }
+    
+    /**
+     * Display a single inquiry
+     * @param int $id The inquiry ID
+     */
+    public function view_inquiry($id) {
+        $inquiry = $this->adminInquiryModel->getInquiryById($id);
+        
+        if (!$inquiry) {
+            $_SESSION['admin_error'] = 'Inquiry not found';
+            header('Location: ' . URLROOT . '/admins/inquiries');
+            exit;
+        }
+        
+        $data = [
+            'title' => 'View Inquiry',
+            'inquiry' => $inquiry
+        ];
+        
+        $this->view('admins/inquiries/view', $data);
+    }
+    
+    /**
+     * Update the status of an inquiry
+     */
+    public function update_inquiry_status() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $inquiryId = $_POST['inquiry_id'];
+            $status = $_POST['status'];
+            
+            if ($this->adminInquiryModel->updateStatus($inquiryId, $status)) {
+                $_SESSION['admin_success'] = 'Inquiry status updated successfully';
+                header('Location: ' . URLROOT . '/admins/view_inquiry/' . $inquiryId);
+                exit;
+            } else {
+                $_SESSION['admin_error'] = 'Failed to update inquiry status';
+                header('Location: ' . URLROOT . '/admins/view_inquiry/' . $inquiryId);
+                exit;
+            }
+        } else {
+            header('Location: ' . URLROOT . '/admins/inquiries');
+            exit;
+        }
+    }
+    
+    /**
+     * Delete an inquiry
+     */
+    public function delete_inquiry() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $inquiryId = $_POST['inquiry_id'];
+            
+            if ($this->adminInquiryModel->deleteInquiry($inquiryId)) {
+                $_SESSION['admin_success'] = 'Inquiry deleted successfully';
+                header('Location: ' . URLROOT . '/admins/inquiries');
+                exit;
+            } else {
+                $_SESSION['admin_error'] = 'Failed to delete inquiry';
+                header('Location: ' . URLROOT . '/admins/inquiries');
+                exit;
+            }
+        } else {
+            header('Location: ' . URLROOT . '/admins/inquiries');
+            exit;
+        }
+    }
+    
+    /**
+     * Search inquiries
+     */
+    public function search_inquiries() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['keyword'])) {
+            $keyword = trim($_GET['keyword']);
+            $inquiries = $this->adminInquiryModel->searchInquiries($keyword);
+            
+            $data = [
+                'title' => 'Search Results for "' . $keyword . '"',
+                'inquiries' => $inquiries,
+                'keyword' => $keyword,
+                'new_count' => $this->adminInquiryModel->countInquiriesByStatus('New'),
+                'in_progress_count' => $this->adminInquiryModel->countInquiriesByStatus('In Progress'),
+                'completed_count' => $this->adminInquiryModel->countInquiriesByStatus('Completed')
+            ];
+            
+            $this->view('admins/inquiries/index', $data);
+        } else {
+            header('Location: ' . URLROOT . '/admins/inquiries');
+            exit;
+        }
+    }
+    
+    public function filter_inquiries($status = null) {
+        if ($status) {
+            $inquiries = $this->adminInquiryModel->getInquiriesByStatus($status);
+            $title = ucfirst($status) . ' Inquiries';
+        } else {
+            $inquiries = $this->adminInquiryModel->getInquiries();
+            $title = 'All Inquiries';
+        }
+        
+        $data = [
+            'title' => $title,
+            'inquiries' => $inquiries,
+            'status_filter' => $status,
+            'new_count' => $this->adminInquiryModel->countInquiriesByStatus('New'),
+            'completed_count' => $this->adminInquiryModel->countInquiriesByStatus('Completed')
+        ];
+        
+        $this->view('admins/inquiries/index', $data);
+    }
+    
+    // Add this method to your Admins controller class
+
+    public function markInquiryReplied() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $inquiryId = $_POST['inquiry_id'];
+            
+            // Update the inquiry status to 'Completed'
+            if ($this->adminModel->markInquiryReplied($inquiryId, 'Completed')) {
+                $_SESSION['admin_success'] = 'Inquiry marked as replied';
+            } else {
+                $_SESSION['admin_error'] = 'Failed to update inquiry status';
+            }
+            
+            header('Location: ' . URLROOT . '/admins/dashboard');
+            exit;
+        } else {
+            // Redirect to dashboard if not POST
+            header('Location: ' . URLROOT . '/admins/dashboard');
             exit;
         }
     }
