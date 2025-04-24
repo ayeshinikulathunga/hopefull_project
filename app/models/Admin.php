@@ -188,11 +188,23 @@ public function editUser($data) {
             $query = "SELECT COUNT(*) FROM users WHERE UserID = :userId";
             $this->db->query($query);
             $this->db->bind(':userId', $userId);
-            $count = $this->db->single(); // Get the count of existing user IDs
+            $count = $this->db->single(); 
     
-        } while ($count > 0); // Repeat until a unique ID is found
+        } while ($count > 0); 
     
-        return $userId; // Return the unique user ID
+        return $userId; 
+    }
+
+
+    public function getInquiries() {
+        $this->db->query("SELECT * FROM inquiries WHERE Status = 'New' ORDER BY DateSubmitted DESC");
+        return $this->db->resultSet();
+    }
+    
+    public function markInquiryReplied($inquiryId) {
+        $this->db->query("UPDATE inquiries SET Status = 'Completed' WHERE InquiryID = :inquiry_id");
+        $this->db->bind(':inquiry_id', $inquiryId);
+        return $this->db->execute();
     }
 
 }
