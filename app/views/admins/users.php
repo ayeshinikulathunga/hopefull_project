@@ -51,7 +51,7 @@
 </td>
                                     <td>
                                         <div class="btn-group">
-                                        <button type="button" class="btn btn-sm btn-info edit-user-btn" 
+                                        <button type="button" class="btn btn-sm btn-primary" 
     data-id="<?php echo $user->UserID; ?>" 
     data-email="<?php echo $user->Email; ?>" 
     data-username="<?php echo $user->Username; ?>" 
