@@ -252,6 +252,7 @@
   text-decoration: none;
   transition: background-color var(--transition-speed), transform var(--transition-speed);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
 }
 
 .mp-product-card__button:hover {

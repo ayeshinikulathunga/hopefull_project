@@ -15,7 +15,7 @@ define('SITENAME', 'Hopefull');
 define('APPROOT', dirname(dirname(__FILE__)));
 
 
-// In config/config.php
+
 $rootDir = realpath(dirname(__FILE__) . '/..');
 define('ROOT_PATH', $rootDir);
 define('UPLOADS_PATH', ROOT_PATH . '/public/uploads');
@@ -28,3 +28,12 @@ define('PAYHERE_SANDBOX', true);
 define('PAYHERE_RETURN_URL', URLROOT . '/marketplace/paymentSuccess');
 define('PAYHERE_CANCEL_URL', URLROOT . '/marketplace/paymentCancelled');
 define('PAYHERE_NOTIFY_URL', URLROOT . '/marketplace/paymentNotify');
+
+
+define('BANK_SLIPS_PATH', ROOT_PATH . '/public/uploads/slips');
+define('BANK_SLIPS_URL', URLROOT . '/uploads/slips');
+
+// Create the directory if it doesn't exist
+if (!file_exists(BANK_SLIPS_PATH)) {
+    mkdir(BANK_SLIPS_PATH, 0755, true);
+}
