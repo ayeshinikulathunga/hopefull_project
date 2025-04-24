@@ -11,6 +11,7 @@
 
 /* Page Header */
 .profile-header {
+  margin-top: 50px;
   text-align: center;
   margin-bottom: 2.5rem;
 }
@@ -439,7 +440,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--primary-color);
+  background-color: var(--primary-lighter);
   color: white;
   width: 60px;
   padding: 0.75rem 0;
@@ -527,6 +528,7 @@
   overflow: hidden;
   transform: translateY(-20px);
   transition: all 0.3s;
+  justify-content: center;
 }
 
 .custom-modal.show .modal-content {
@@ -540,6 +542,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-radius: 10px;
 }
 
 .modal-title {
@@ -565,11 +568,10 @@
 }
 
 .modal-footer {
-  padding: 1rem 1.5rem;
+  padding: 0;
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  background-color: #f8f8f8;
+  flex-direction: column;
+  width: 100%;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -609,7 +611,8 @@
 .form-check {
   display: flex;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-check-input {
@@ -619,6 +622,35 @@
 .form-check-label {
   font-size: 0.95rem;
   color: var(--text-dark);
+}
+
+
+#editProfileModal .modal-header,
+#changePasswordModal .modal-header {
+  background-color: #8abaf1;
+}
+
+#editProfileModal .form-control,
+#changePasswordModal .form-control {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+}
+
+#editProfileModal .form-check,
+#changePasswordModal .form-check {
+  margin-top: 1.5rem;
+}
+
+#editProfileModal .form-check-input,
+#changePasswordModal .form-check-input {
+  width: 18px;
+  height: 18px;
+}
+
+#editProfileModal .form-group label,
+#changePasswordModal .form-group label {
+  font-weight: normal;
+  color: #333;
 }
 
 /* Helpers */

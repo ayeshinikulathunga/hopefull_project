@@ -122,4 +122,62 @@ class Feedback {
         
         return $this->db->execute();
     }
+
+    /**
+ * Add a ViewedByDonor column to the feedback_reports table 
+ * (You would need to run this SQL in your database):
+ * 
+ * ALTER TABLE feedback_reports ADD COLUMN ViewedByDonor TINYINT(1) DEFAULT 0;
+ */
+
+/**
+ * Get feedback by ID
+ * @param string $feedbackId The feedback ID
+ * @return object|bool Feedback or false if not found
+ */
+public function getFeedbackById($feedbackId) {
+    $this->db->query('SELECT fr.*, 
+                     d.DonorID, d.DonationType, d.Amount, d.QuantityDonated,
+                     dr.Title as RequestTitle
+                     FROM feedback_reports fr
+                     JOIN donations d ON fr.DonationID = d.DonationID
+                     JOIN donation_requests dr ON fr.RequestID = dr.RequestID
+                     WHERE fr.FeedbackID = :feedbackId');
+    
+    $this->db->bind(':feedbackId', $feedbackId);
+    
+    return $this->db->single();
+}
+
+/**
+ * Mark feedback as viewed by donor
+ * @param string $feedbackId The feedback ID
+ * @return bool True if successful, false otherwise
+ */
+public function markAsViewed($feedbackId) {
+    $this->db->query('UPDATE feedback_reports SET ViewedByDonor = 1 WHERE FeedbackID = :feedbackId');
+    $this->db->bind(':feedbackId', $feedbackId);
+    
+    return $this->db->execute();
+}
+
+/**
+ * Get donor's feedback statistics
+ * @param string $donorId The donor ID
+ * @return object Feedback statistics
+ */
+public function getDonorFeedbackStats($donorId) {
+    $this->db->query('SELECT 
+                     COUNT(*) as TotalFeedback,
+                     SUM(CASE WHEN fr.ViewedByDonor = 0 THEN 1 ELSE 0 END) as UnreadFeedback,
+                     SUM(CASE WHEN fr.FeedbackType = "ImpactReport" THEN 1 ELSE 0 END) as ImpactReports,
+                     SUM(CASE WHEN fr.FeedbackType = "General" THEN 1 ELSE 0 END) as GeneralFeedback
+                     FROM feedback_reports fr
+                     JOIN donations d ON fr.DonationID = d.DonationID
+                     WHERE d.DonorID = :donorId');
+    
+    $this->db->bind(':donorId', $donorId);
+    
+    return $this->db->single();
+}
 }

@@ -41,7 +41,6 @@
             </div>
         </div>
         
-        <!-- Rest of the file remains unchanged -->
         <!-- Request Content -->
         <div class="detail-content">
             <!-- Left Column - Request Details -->

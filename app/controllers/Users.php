@@ -2,8 +2,6 @@
 class Users extends Controller {
     private $userModel;
    
-
- 
     public function __construct() {
         // Ensure the user model is always loaded
         $this->userModel = $this->model('User');
@@ -12,77 +10,12 @@ class Users extends Controller {
         redirect('users/login');
     }
 
-   
-
     public function register() {
         $data = [
             'title' => 'Register'
         ];
         $this->view('users/register', $data);
     }
-
-    /*public function register_donor() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Process form
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            // Init data
-            $data = [
-                'title' => 'Register as Donor',
-                'firstName' => trim($_POST['firstName']),
-                'lastName' => trim($_POST['lastName']),
-                'email' => trim($_POST['email']),
-                'contactNumber' => trim($_POST['contactNumber']),
-                'password' => trim($_POST['password']),
-                'confirmPassword' => trim($_POST['confirmPassword']),
-                'terms' => isset($_POST['terms']),
-                'errors' => []
-            ];
-
-            // Validate Email
-            if(empty($data['email'])) {
-                $data['errors']['email'] = 'Please enter email';
-            } elseif($this->userModel->findUserByEmail($data['email'])) {
-                $data['errors']['email'] = 'Email is already registered';
-            }
-
-            // Validate Password
-            if(empty($data['password'])) {
-                $data['errors']['password'] = 'Please enter password';
-            } elseif(strlen($data['password']) < 6) {
-                $data['errors']['password'] = 'Password must be at least 6 characters';
-            }
-
-            // Check for empty errors array
-            if(empty($data['errors'])) {
-                // Attempt to register user
-                if($this->userModel->register($data)) {
-                    flash('register_success', 'You are registered and can log in');
-                    redirect('users/login');
-                } else {
-                    die('Something went wrong');
-                }
-            }
-
-            // Load view with errors
-            $this->view('users/register_donor', $data);
-        } else {
-            // Init data
-            $data = [
-                'title' => 'Register as Donor',
-                'firstName' => '',
-                'lastName' => '',
-                'email' => '',
-                'contactNumber' => '',
-                'password' => '',
-                'confirmPassword' => '',
-                'terms' => false,
-                'errors' => []
-            ];
-
-            $this->view('users/register_donor', $data);
-        }
-    }*/
 
     public function register_donor() {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -148,104 +81,7 @@ class Users extends Controller {
         }
     }
 
-    /*public function register_recipient() {
-        $data = [
-            'title' => 'Register as Recipient'
-        ];
-        $this->view('users/register_recipient', $data);
-    }*/
-
-    /*public function register_recipient() {
-    if($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Process form
-        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-        // Init data
-        $data = [
-            'title' => 'Register as Recipient',
-            'firstName' => trim($_POST['firstName']),
-            'lastName' => trim($_POST['lastName']),
-            'email' => trim($_POST['email']),
-            'contactNumber' => trim($_POST['contactNumber']),
-            'address' => trim($_POST['address']),
-            'organizationType' => trim($_POST['organizationType']),
-            'documentationURL' => trim($_POST['documentationURL']),
-            'password' => trim($_POST['password']),
-            'confirmPassword' => trim($_POST['confirmPassword']),
-            'terms' => isset($_POST['terms']),
-            'errors' => []
-        ];
-
-        // Validation
-        if(empty($data['firstName'])) {
-            $data['errors']['firstName'] = 'Please enter first name';
-        }
-
-        if(empty($data['lastName'])) {
-            $data['errors']['lastName'] = 'Please enter last name';
-        }
-
-        if(empty($data['email'])) {
-            $data['errors']['email'] = 'Please enter email';
-        } elseif($this->userModel->findUserByEmail($data['email'])) {
-            $data['errors']['email'] = 'Email is already registered';
-        }
-
-        if(empty($data['password'])) {
-            $data['errors']['password'] = 'Please enter password';
-        } elseif(strlen($data['password']) < 6) {
-            $data['errors']['password'] = 'Password must be at least 6 characters';
-        }
-
-        if($data['password'] !== $data['confirmPassword']) {
-            $data['errors']['confirmPassword'] = 'Passwords do not match';
-        }
-
-        if(empty($data['organizationType'])) {
-            $data['errors']['organizationType'] = 'Please select an organization type';
-        }
-
-        if(empty($data['documentationURL'])) {
-            $data['errors']['documentationURL'] = 'Please provide documentation URL';
-        }
-
-        if(!$data['terms']) {
-            $data['errors']['terms'] = 'You must accept the Terms and Conditions';
-        }
-
-        // Make sure errors are empty
-        if(empty($data['errors'])) {
-            // Register Recipient
-            if($this->userModel->registerRecipient($data)) {
-                flash('register_success', 'You are registered as a recipient and can log in');
-                redirect('users/login');
-            } else {
-                $data['errors']['general'] = 'Something went wrong during registration';
-                $this->view('users/register_recipient', $data);
-            }
-        } else {
-            // Load view with errors
-            $this->view('users/register_recipient', $data);
-        }
-    } else {
-        // Init data
-        $data = [
-            'title' => 'Register as Recipient',
-            'firstName' => '',
-            'lastName' => '',
-            'email' => '',
-            'contactNumber' => '',
-            'address' => '',
-            'organizationType' => '',
-            'documentationURL' => '',
-            'password' => '',
-            'confirmPassword' => '',
-            'errors' => []
-        ];
-
-        $this->view('users/register_recipient', $data);
-    }
-}*/
+  
 public function register_recipient() {
     if($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Process form

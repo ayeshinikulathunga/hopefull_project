@@ -9,6 +9,9 @@
             </a>
         </div>
         
+        <?php flash('order_message'); ?>
+        <?php flash('order_error'); ?>
+        
         <div class="mp-order-details__order-info">
             <div class="mp-order-details__info-header">
                 <div>
@@ -20,7 +23,7 @@
                 </span>
             </div>
             
-            <!-- Order Summary Card - Added prominent order summary -->
+            <!-- Order Summary Card -->
             <div class="mp-order-details__summary-card">
                 <div class="mp-order-details__summary-header">
                     <h3>Order Summary</h3>
@@ -70,11 +73,6 @@
                 </div>
                 
                 <div class="mp-order-details__section">
-                    <h3>Shipping Address</h3>
-                    <p><?php echo !empty($data['order']->ShippingAddress) ? nl2br(htmlspecialchars($data['order']->ShippingAddress)) : 'No shipping address provided'; ?></p>
-                </div>
-                
-                <div class="mp-order-details__section">
                     <h3>Payment Method</h3>
                     <p>
                         <?php 
@@ -108,6 +106,12 @@
                             $statuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
                             $currentStatusIndex = array_search($data['order']->Status, $statuses);
                             
+                            // Handle Cancelled status
+                            if ($data['order']->Status === 'Cancelled') {
+                                $statuses = ['Pending', 'Cancelled'];
+                                $currentStatusIndex = 1;
+                            }
+                            
                             foreach ($statuses as $index => $status):
                                 $isCompleted = $index <= $currentStatusIndex;
                                 $isActive = $index === $currentStatusIndex;
@@ -117,7 +121,7 @@
                                     <div class="mp-order-details__timeline-content">
                                         <h4><?php echo $status; ?></h4>
                                         <?php if ($isCompleted): ?>
-                                            <p><?php echo $status === 'Pending' ? 'Order placed' : ($status === 'Processing' ? 'Order is being prepared' : ($status === 'Shipped' ? 'Order has been shipped' : 'Order has been delivered')); ?></p>
+                                            <p><?php echo $status === 'Pending' ? 'Order placed' : ($status === 'Processing' ? 'Order is being prepared' : ($status === 'Shipped' ? 'Order has been shipped' : ($status === 'Delivered' ? 'Order has been delivered' : 'Order has been cancelled'))); ?></p>
                                             <span class="mp-order-details__timeline-date">
                                                 <?php
                                                 // In a real application, you would have timestamps for each status change
@@ -137,6 +141,31 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Display cancellation request status if exists -->
+        <?php if(isset($data['cancellation_request']) && $data['cancellation_request']): ?>
+            <div class="mp-order-details__cancellation-status">
+                <h4>Cancellation Request</h4>
+                <div class="mp-order-details__status-info">
+                    <p><strong>Status:</strong> 
+                        <span class="badge badge-<?php echo $data['cancellation_request']->Status === 'Pending' ? 'warning' : ($data['cancellation_request']->Status === 'Approved' ? 'success' : 'danger'); ?>">
+                            <?php echo $data['cancellation_request']->Status; ?>
+                        </span>
+                    </p>
+                    <p><strong>Reason:</strong> <?php echo $data['cancellation_request']->Reason; ?></p>
+                    <p><strong>Requested On:</strong> <?php echo date('F j, Y - g:i A', strtotime($data['cancellation_request']->RequestDate)); ?></p>
+                    
+                    <?php if($data['cancellation_request']->Status !== 'Pending'): ?>
+                        <p><strong>Processed On:</strong> <?php echo date('F j, Y - g:i A', strtotime($data['cancellation_request']->ProcessedDate)); ?></p>
+                        <?php if(!empty($data['cancellation_request']->Notes)): ?>
+                            <p><strong>Notes:</strong> <?php echo $data['cancellation_request']->Notes; ?></p>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <p class="text-info">Your cancellation request is being reviewed by the seller. We'll notify you once it's processed.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
         
         <div class="mp-order-details__items">
             <h3>Order Items</h3>
@@ -167,9 +196,10 @@
                                             View Product
                                         </a>
                                     </div>
+                                    </div>
                                 </td>
                                 <td>Rs. <?php echo number_format($item->Price, 2); ?></td>
-                                <td class="mp-order-details__quantity"><?php echo $item->Quantity; ?></td>
+                                <td><?php echo $item->Quantity; ?></td>
                                 <td>Rs. <?php echo number_format($item->Price * $item->Quantity, 2); ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -221,89 +251,153 @@
         <?php endif; ?>
         
         <div class="mp-order-details__actions">
-            <?php if($data['order']->Status === 'Pending'): ?>
-                <button class="mp-order-details__cancel-btn">Cancel Order</button>
+            <?php if(isset($data['cancellation_allowed']) && $data['cancellation_allowed']): ?>
+                <?php if(isset($data['cancellation_request']) && $data['cancellation_request']): ?>
+                    <!-- Already has a cancellation request - no action needed -->
+                <?php else: ?>
+                    <!-- Show cancel button if there's no existing request and cancellation is allowed -->
+                    <button class="mp-order-details__cancel-btn" id="requestCancellationBtn">
+                        <i class="fas fa-times-circle"></i> Request Cancellation
+                    </button>
+                <?php endif; ?>
             <?php endif; ?>
             <button class="mp-order-details__print-btn" id="printReceiptBtn">
-             <i class="fas fa-print"></i> Print Receipt
-    </button>
+                <i class="fas fa-print"></i> Print Receipt
+            </button>
             <a href="<?php echo URLROOT; ?>/marketplace/orders" class="mp-order-details__back-to-orders">Back to Orders</a>
         </div>
-        <div class="mp-receipt print-only">
-    <div class="mp-receipt__header">
-        <div class="mp-receipt__logo">
-            <!-- Replace with your actual logo path -->
-            <img src="<?php echo URLROOT; ?>/images/logo.png" alt="Logo">
+        
+       <!--  Cancellation Request Modal -->
+<div id="cancellationModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        
+        <div class="cancellation-header">
+            <div class="cancel-icon">
+                <i class="fas fa-times"></i>
+            </div>
+            <h2>Request Order Cancellation</h2>
         </div>
-        <div class="mp-receipt__title">
-            <h1>Receipt</h1>
-            <p>Order #<?php echo $data['order']->OrderID; ?></p>
-        </div>
-    </div>
-    
-    <div class="mp-receipt__info">
-        <div class="mp-receipt__order-details">
-            <h2>Order Information</h2>
-            <p><strong>Date:</strong> <?php echo date('F j, Y, g:i a', strtotime($data['order']->OrderDate)); ?></p>
-            <p><strong>Status:</strong> <?php echo $data['order']->Status; ?></p>
-            <p><strong>Payment Method:</strong> Cash on Delivery</p>
-        </div>
-        <div class="mp-receipt__customer">
-            <h2>Shipping Address</h2>
-            <p><?php echo nl2br($data['order']->ShippingAddress ?? 'No shipping address provided'); ?></p>
-        </div>
-    </div>
-    
-    <div class="mp-receipt__items">
-        <h2>Items Purchased</h2>
-        <table class="mp-receipt__table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if(!empty($data['order_items'])): ?>
-                    <?php foreach($data['order_items'] as $item): ?>
-                        <tr>
-                            <td><?php echo $item->ProductName; ?></td>
-                            <td>Rs. <?php echo number_format($item->Price, 2); ?></td>
-                            <td><?php echo $item->Quantity; ?></td>
-                            <td>Rs. <?php echo number_format($item->Price * $item->Quantity, 2); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="4">No items found for this order.</td>
-                    </tr>
+        
+        <form action="<?php echo URLROOT; ?>/marketplace/requestCancellation" method="POST">
+            <input type="hidden" name="order_id" value="<?php echo $data['order']->OrderID; ?>">
+            
+            <div class="form-group">
+                <label for="reason">Reason for Cancellation:</label>
+                <textarea id="reason" name="reason" class="form-control" rows="4" required placeholder="Please explain why you need to cancel this order..."><?php echo isset($data['cancellation']) ? $data['cancellation']['reason'] : ''; ?></textarea>
+                <?php if(isset($data['cancellation']) && !empty($data['cancellation']['reason_err'])): ?>
+                    <span class="invalid-feedback"><?php echo $data['cancellation']['reason_err']; ?></span>
                 <?php endif; ?>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="3">Subtotal:</td>
-                    <td>Rs. <?php echo number_format($data['order']->TotalAmount - 350, 2); ?></td>
-                </tr>
-                <tr>
-                    <td colspan="3">Shipping:</td>
-                    <td>Rs. 350.00</td>
-                </tr>
-                <tr class="mp-receipt__total">
-                    <td colspan="3">Total:</td>
-                    <td>Rs. <?php echo number_format($data['order']->TotalAmount, 2); ?></td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    
-    <div class="mp-receipt__footer">
-        <p>Thank you for your purchase!</p>
-        <p>If you have any questions, please contact our customer support.</p>
-        <p>© <?php echo date('Y'); ?> Your Company Name</p>
+            </div>
+            
+            <div class="cancellation-notice">
+                <p><strong>Note:</strong> Cancellation requests can only be processed if the order is still in the "Pending" or "Processing" stage.</p>
+                <p>Once an order has been shipped, it cannot be cancelled.</p>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelCancellationBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+        </form>
     </div>
 </div>
+        
+        <div class="mp-receipt print-only">
+            <div class="mp-receipt__header">
+                <div class="mp-receipt__logo">
+                    <!-- Replace with your actual logo path -->
+                    <img src="<?php echo URLROOT; ?>/images/logo.png" alt="Logo">
+                </div>
+                <div class="mp-receipt__title">
+                    <h1>Receipt</h1>
+                    <p>Order #<?php echo $data['order']->OrderID; ?></p>
+                </div>
+            </div>
+            
+            <div class="mp-receipt__info">
+                <div class="mp-receipt__order-details">
+                    <h2>Order Information</h2>
+                    <p><strong>Date:</strong> <?php echo date('F j, Y, g:i a', strtotime($data['order']->OrderDate)); ?></p>
+                    <p><strong>Status:</strong> <?php echo $data['order']->Status; ?></p>
+                    <p><strong>Payment Method:</strong> 
+                        <?php 
+                        if (!empty($data['order']->PaymentMethod)) {
+                            switch($data['order']->PaymentMethod) {
+                                case 'cash_on_delivery':
+                                    echo 'Cash on Delivery';
+                                    break;
+                                case 'bank_transfer':
+                                    echo 'Bank Transfer';
+                                    break;
+                                case 'online_payment':
+                                    echo 'Online Payment';
+                                    break;
+                                default:
+                                    echo ucwords(str_replace('_', ' ', $data['order']->PaymentMethod));
+                            }
+                        } else {
+                            echo 'Not specified';
+                        }
+                        ?>
+                    </p>
+                </div>
+                <div class="mp-receipt__customer">
+                    <h2>Shipping Address</h2>
+                    <p><?php echo nl2br($data['order']->ShippingAddress ?? 'No shipping address provided'); ?></p>
+                </div>
+            </div>
+            
+            <div class="mp-receipt__items">
+                <h2>Items Purchased</h2>
+                <table class="mp-receipt__table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(!empty($data['order_items'])): ?>
+                            <?php foreach($data['order_items'] as $item): ?>
+                                <tr>
+                                    <td><?php echo $item->ProductName; ?></td>
+                                    <td>Rs. <?php echo number_format($item->Price, 2); ?></td>
+                                    <td><?php echo $item->Quantity; ?></td>
+                                    <td>Rs. <?php echo number_format($item->Price * $item->Quantity, 2); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4">No items found for this order.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3">Subtotal:</td>
+                            <td>Rs. <?php echo number_format($data['order']->TotalAmount - 350, 2); ?></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">Shipping:</td>
+                            <td>Rs. 350.00</td>
+                        </tr>
+                        <tr class="mp-receipt__total">
+                            <td colspan="3">Total:</td>
+                            <td>Rs. <?php echo number_format($data['order']->TotalAmount, 2); ?></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="mp-receipt__footer">
+                <p>Thank you for your purchase!</p>
+                <p>If you have any questions, please contact our customer support.</p>
+                <p>© <?php echo date('Y'); ?> Hopefull Marketplace</p>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -387,19 +481,42 @@
             });
         }
         
-        // Cancel order button
-        const cancelOrderBtn = document.querySelector('.mp-order-details__cancel-btn');
-        if (cancelOrderBtn) {
-            cancelOrderBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to cancel this order?')) {
-                    // In a real application, you would submit this to the server
-                    alert('Order cancellation request has been submitted.');
-                }
+        // Cancellation modal functionality
+        const cancellationModal = document.getElementById('cancellationModal');
+        const requestCancellationBtn = document.getElementById('requestCancellationBtn');
+        const cancelCancellationBtn = document.getElementById('cancelCancellationBtn');
+        const closeBtn = cancellationModal ? cancellationModal.querySelector('.close') : null;
+        
+        // Open modal when request cancellation button is clicked
+        if (requestCancellationBtn && cancellationModal) {
+            requestCancellationBtn.addEventListener('click', function() {
+                cancellationModal.style.display = 'block';
             });
         }
-    });
-
-    const printReceiptBtn = document.getElementById('printReceiptBtn');
+        
+        // Close modal when close button is clicked
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                cancellationModal.style.display = 'none';
+            });
+        }
+        
+        // Close modal when cancel button is clicked
+        if (cancelCancellationBtn) {
+            cancelCancellationBtn.addEventListener('click', function() {
+                cancellationModal.style.display = 'none';
+            });
+        }
+        
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target == cancellationModal) {
+                cancellationModal.style.display = 'none';
+            }
+        });
+        
+        // Print receipt functionality
+        const printReceiptBtn = document.getElementById('printReceiptBtn');
         if (printReceiptBtn) {
             printReceiptBtn.addEventListener('click', function() {
                 // Small delay to ensure all styles are applied
@@ -408,8 +525,74 @@
                 }, 100);
             });
         }
+    });
 
+    // Modal handling JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Elements
+    const cancellationModal = document.getElementById('cancellationModal');
+    const requestCancellationBtn = document.getElementById('requestCancellationBtn');
+    const cancelCancellationBtn = document.getElementById('cancelCancellationBtn');
+    const closeBtn = cancellationModal ? cancellationModal.querySelector('.close') : null;
+    const reasonTextarea = document.getElementById('reason');
     
+    // Open modal when request cancellation button is clicked
+    if (requestCancellationBtn && cancellationModal) {
+        requestCancellationBtn.addEventListener('click', function() {
+            // Display the modal
+            cancellationModal.style.display = 'block';
+            
+            // Focus on the reason textarea
+            if (reasonTextarea) {
+                setTimeout(() => {
+                    reasonTextarea.focus();
+                }, 300);
+            }
+            
+            // Prevent page scrolling when modal is open
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    
+    // Close modal functions
+    function closeModal() {
+        if (cancellationModal) {
+            cancellationModal.style.display = 'none';
+            
+            // Re-enable page scrolling
+            document.body.style.overflow = '';
+            
+            // Reset form if needed
+            if (reasonTextarea) {
+                reasonTextarea.value = '';
+            }
+        }
+    }
+    
+    // Close modal when close button is clicked
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close modal when cancel button is clicked
+    if (cancelCancellationBtn) {
+        cancelCancellationBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(event) {
+        if (event.target == cancellationModal) {
+            closeModal();
+        }
+    });
+    
+    // Close modal when pressing Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && cancellationModal.style.display === 'block') {
+            closeModal();
+        }
+    });
+});
 </script>
 
 <?php require APPROOT . '/views/includes/footer.php'; ?>

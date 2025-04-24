@@ -10,7 +10,7 @@
             <p class="subtitle">Manage all your donation requests</p>
         </div>
         <a href="<?php echo URLROOT; ?>/recipients/createRequest" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Create New Request
+            <i class="fas fa-plus"></i>  New Request
         </a>
     </div>
     

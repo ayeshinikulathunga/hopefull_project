@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/donation-checkout.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/donation.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/profile.css">
-
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/donor_feedback.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/marketplace.css">
+    
 </head>
 <body>
     <!-- User Sidebar -->
@@ -42,7 +44,7 @@
                 </a>
                
                 </a>
-                <a href="<?php echo URLROOT; ?>/donors/impact" class="sidebar-menu-item">
+                <a href="<?php echo URLROOT; ?>/donors/feedback" class="sidebar-menu-item">
                     <i class="fas fa-comment-alt"></i> Impact Reports
                 </a>
                 <a href="<?php echo URLROOT; ?>/donors/inquiries" class="sidebar-menu-item">
@@ -77,6 +79,9 @@
                 <a href="<?php echo URLROOT; ?>/donors/allRequests">Donations</a>
                 <a href="<?php echo URLROOT; ?>/donors/events">Events</a>
                 <a href="<?php echo URLROOT; ?>/marketplace">Marketplace</a>
+
+
+                
                 
                 <!-- Donation Icon with Pending Donations Badge -->
                 <a href="<?php echo URLROOT; ?>/donations/pendingDonations" class="donation-icon">

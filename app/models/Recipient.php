@@ -502,7 +502,6 @@ class Recipient {
         return $this->db->resultSet();
     }
 
-    
 
     public function updateProfile($data) {
         $this->db->query('UPDATE recipients SET 

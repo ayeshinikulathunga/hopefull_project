@@ -1,9 +1,5 @@
-/* 
- * Request Management Stylesheet for Hopefull
- * This stylesheet contains styles for recipient request management
- */
-
  @import 'variables.css';
+ @import 'buttons.css';
 
 
  .requests-page-container,
