@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/admin.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/seller.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/print-styles.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/seller_bank_payments.css">
  
     
 </head>

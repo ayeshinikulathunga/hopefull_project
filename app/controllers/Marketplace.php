@@ -452,7 +452,7 @@ class Marketplace extends Controller {
         }
     }*/
 
-    public function checkout() {
+    /*public function checkout() {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
             flash('login_message', 'Please log in to checkout', 'alert alert-info');
@@ -598,6 +598,253 @@ class Marketplace extends Controller {
                         // Create directory if it doesn't exist
                         if (!file_exists($slipsDir)) {
                             mkdir($slipsDir, 0777, true);
+                        }
+                        
+                        // Set file destination
+                        $destination = $slipsDir . '/' . $newFileName;
+                        
+                        // Upload file
+                        if (move_uploaded_file($_FILES['bank_slip']['tmp_name'], $destination)) {
+                            // Create bank payment record
+                            $bankPaymentModel = $this->model('BankPayment');
+                            $bankPaymentData = [
+                                'order_id' => $orderId,
+                                'slip_file' => $newFileName
+                            ];
+                            
+                            if (!$bankPaymentModel->createBankPayment($bankPaymentData)) {
+                                error_log("Failed to create bank payment record");
+                                // Continue anyway as the file is uploaded
+                            }
+                            
+                            $slipFileName = $newFileName;
+                        } else {
+                            error_log("Failed to move uploaded file");
+                            // Continue anyway as the order is created
+                        }
+                    }
+                    
+                    // Everything successful - commit transaction
+                    $this->db->commit();
+                    
+                    // If payment method is PayHere, create a payment record and redirect to PayHere
+                    if ($data['payment_method'] == 'payhere') {
+                        // Create payment record
+                        $paymentData = [
+                            'order_id' => $orderId,
+                            'payment_amount' => $data['total_amount'],
+                            'payment_method' => 'payhere',
+                            'status' => 'Pending',
+                            'payment_details' => json_encode([
+                                'user_id' => $data['user_id']
+                            ])
+                        ];
+                        
+                        $paymentId = $this->paymentModel->createPaymentRecord($paymentData);
+                        
+                        if (!$paymentId) {
+                            throw new Exception("Failed to create payment record");
+                        }
+                        
+                        // Store the order ID in session for later use
+                        $_SESSION['payhere_order_id'] = $orderId;
+                        $_SESSION['payhere_payment_id'] = $paymentId;
+                        
+                        // Clear cart
+                        unset($_SESSION['cart']);
+                        
+                        // Redirect to PayHere
+                        redirect('marketplace/processPayHere/' . $orderId);
+                    } else {
+                        // For other payment methods, proceed as usual
+                        
+                        // Clear cart
+                        unset($_SESSION['cart']);
+                        
+                        flash('order_message', 'Order placed successfully', 'alert alert-success');
+                        redirect('marketplace/orderConfirmation/' . $orderId);
+                    }
+                    
+                } catch (Exception $e) {
+                    // Something went wrong - rollback
+                    $this->db->rollBack();
+                    error_log("Checkout error: " . $e->getMessage());
+                    flash('order_error', 'Something went wrong, please try again', 'alert alert-danger');
+                    $this->view('marketplace/checkout', $data);
+                }
+            } else {
+                // Load view with errors
+                $this->view('marketplace/checkout', $data);
+            }
+        } else {
+            $data = [
+                'title' => 'Checkout',
+                'cart_items' => $_SESSION['cart'],
+                'total' => 0,
+                'shipping_address' => '',
+                'shipping_address_err' => '',
+                'payment_method' => '',
+                'payment_method_err' => '',
+                'contact_phone' => '',
+                'contact_phone_err' => '',
+                'shipping_notes' => ''
+            ];
+    
+            // Calculate total
+            foreach ($data['cart_items'] as $item) {
+                $data['total'] += $item['price'] * $item['quantity'];
+            }
+    
+            $this->view('marketplace/checkout', $data);
+        }
+    }*/
+
+    public function checkout() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('login_message', 'Please log in to checkout', 'alert alert-info');
+            redirect('users/login');
+        }
+    
+        // Check if cart is empty
+        if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+            flash('cart_message', 'Your cart is empty', 'alert alert-info');
+            redirect('marketplace/cart');
+        }
+    
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $data = [
+                'user_id' => $_SESSION['user_id'],
+                'total_amount' => 0,
+                'shipping_address' => trim($_POST['shipping_address']),
+                'shipping_address_err' => '',
+                'payment_method' => trim($_POST['payment_method']),
+                'payment_method_err' => '',
+                'contact_phone' => trim($_POST['contact_phone'] ?? ''),
+                'contact_phone_err' => '',
+                'shipping_notes' => trim($_POST['shipping_notes'] ?? '')
+            ];
+    
+            // Calculate total
+            $subtotal = 0;
+            foreach ($_SESSION['cart'] as $item) {
+                $subtotal += $item['price'] * $item['quantity'];
+            }
+            
+            // Add shipping cost (Rs. 350)
+            $data['total_amount'] = $subtotal + 350;
+    
+            // Validate inputs
+            if (empty($data['shipping_address'])) {
+                $data['shipping_address_err'] = 'Please enter shipping address';
+            }
+    
+            if (empty($data['payment_method'])) {
+                $data['payment_method_err'] = 'Please select a payment method';
+            }
+    
+            if (empty($data['contact_phone'])) {
+                $data['contact_phone_err'] = 'Please enter contact number for delivery';
+            } elseif (strlen($data['contact_phone']) < 10) {
+                $data['contact_phone_err'] = 'Contact number must be at least 10 characters';
+            }
+    
+            // If bank transfer payment method, validate payment slip
+            $bankPaymentUploaded = false;
+            $slipFileName = '';
+            if ($data['payment_method'] == 'bank') {
+                if (!isset($_FILES['bank_slip']) || $_FILES['bank_slip']['error'] != 0) {
+                    $data['payment_method_err'] = 'Please upload your bank transfer slip';
+                } else {
+                    // File validation logic
+                    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+                    $fileType = $_FILES['bank_slip']['type'];
+                    $fileSize = $_FILES['bank_slip']['size'];
+                    $maxSize = 5 * 1024 * 1024; // 5MB max size
+                    
+                    if (!in_array($fileType, $allowedTypes)) {
+                        $data['payment_method_err'] = 'Only JPEG, PNG, GIF images and PDF files are allowed';
+                    } elseif ($fileSize > $maxSize) {
+                        $data['payment_method_err'] = 'File size must be less than 5MB';
+                    } else {
+                        $bankPaymentUploaded = true;
+                    }
+                }
+            }
+    
+            // If no errors, create order
+            if (empty($data['shipping_address_err']) && empty($data['payment_method_err']) && empty($data['contact_phone_err'])) {
+                // Start transaction
+                $this->db->beginTransaction();
+                
+                try {
+                    // Create order
+                    $orderData = [
+                        'user_id' => $data['user_id'],
+                        'total_amount' => $data['total_amount'],
+                        'shipping_address' => $data['shipping_address'],
+                        'payment_method' => $data['payment_method']
+                    ];
+                    
+                    $orderId = $this->orderModel->createOrder($orderData);
+                    
+                    if (!$orderId) {
+                        throw new Exception("Failed to create order");
+                    }
+                    
+                    // Create shipping record
+                    $shippingData = [
+                        'order_id' => $orderId,
+                        'shipping_address' => $data['shipping_address'],
+                        'contact_phone' => $data['contact_phone'],
+                        'payment_method' => $data['payment_method'],
+                        'shipping_notes' => $data['shipping_notes']
+                    ];
+                    
+                    $shippingId = $this->orderModel->createShippingDetails($shippingData);
+                    
+                    if (!$shippingId) {
+                        throw new Exception("Failed to create shipping record");
+                    }
+                    
+                    // Add order items
+                    $orderItemsSuccess = true;
+                    foreach ($_SESSION['cart'] as $item) {
+                        $orderItem = [
+                            'order_id' => $orderId,
+                            'product_id' => $item['product_id'],
+                            'quantity' => $item['quantity'],
+                            'price' => $item['price']
+                        ];
+                        
+                        if (!$this->orderModel->addOrderItem($orderItem)) {
+                            $orderItemsSuccess = false;
+                            error_log("Failed to add item to order: " . json_encode($orderItem));
+                            break;
+                        }
+                    }
+                    
+                    if (!$orderItemsSuccess) {
+                        throw new Exception("Failed to add items to order");
+                    }
+                    
+                    // Handle bank payment slip upload if applicable
+                    if ($data['payment_method'] == 'bank' && $bankPaymentUploaded) {
+                        // Get file extension
+                        $fileExt = pathinfo($_FILES['bank_slip']['name'], PATHINFO_EXTENSION);
+                        
+                        // Create new filename based on order ID
+                        $newFileName = $orderId . '.' . $fileExt;
+                        
+                        // Set upload directory
+                        $slipsDir = ROOT_PATH . '/../public/uploads/slips';
+                        
+                        // Create directory if it doesn't exist
+                        if (!file_exists($slipsDir)) {
+                            mkdir($slipsDir, 0755, true);
                         }
                         
                         // Set file destination
