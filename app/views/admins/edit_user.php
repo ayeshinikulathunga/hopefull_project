@@ -22,7 +22,7 @@
             <label>User Type</label>
             <select name="user_type" class="form-control">
                 <?php 
-                $types = ['Donor', 'Recipient', 'SystemAdmin', 'AuthModerator', 'RegionalOfficer'];
+                $types = ['Donor', 'Recipient', 'SystemAdmin', 'AuthModerator', 'RegionalOfficer', 'DeliveryOfficer'];
                 foreach ($types as $type): ?>
                     <option value="<?php echo $type; ?>" <?php echo $data['user']->UserType == $type ? 'selected' : ''; ?>>
                         <?php echo $type; ?>

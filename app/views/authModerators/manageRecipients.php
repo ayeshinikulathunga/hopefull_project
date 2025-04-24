@@ -37,7 +37,7 @@
                             <td><?= htmlspecialchars($recipient->Email) ?></td>
                             <td>
     <?php if (!empty($recipient->DocumentationURL)) : ?>
-        <a href="<?= URLROOT . '/uploads/documents/' . $recipient->DocumentationURL ?>" target="_blank" class="btn btn-sm btn-info">View Document</a>
+        <a href="<?= URLROOT . '/uploads/documents/' . $recipient->DocumentationURL ?>" target="_blank" class="btn btn-sm btn-primary">View Document</a>
     <?php else : ?>
         <em>No document</em>
     <?php endif; ?>

@@ -43,9 +43,10 @@
                             <select id="user_type" name="user_type" class="form-control" required>
                                 <option value="Donor">Donor</option>
                                 <option value="Recipient">Recipient</option>
-                                <option value="SystemAdmin">SystemAdmin</option>
-                                <option value="AuthModerator">AuthModerator</option>
-                                <option value="RegionalOfficer">RegionalOfficer</option>
+                                <option value="SystemAdmin">System Admin</option>
+                                <option value="AuthModerator">Authentication Moderator</option>
+                                <option value="RegionalOfficer">Regional Officer</option>
+                                <option value="DeliveryOfficer">Delivery Officer</option>
                             </select>
                         </div>
                         <div class="form-group">
