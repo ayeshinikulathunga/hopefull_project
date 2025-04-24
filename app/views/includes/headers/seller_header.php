@@ -59,6 +59,19 @@
                         </a>
                     </li>
 
+                    <li class="nav-item <?php echo ($data['title'] == 'Bank Payment Verification') ? 'active' : ''; ?>">
+                        <a href="<?php echo URLROOT; ?>/sellers/bankPayments">
+                            <i class="fas fa-money-check-alt"></i>
+                            <span>Bank Payments</span>
+                            <?php 
+                            // Show notification badge if there are pending bank payments
+                            if(isset($data['pending_bank_payments_count']) && $data['pending_bank_payments_count'] > 0): 
+                            ?>
+                            <span class="notification-badge"><?php echo $data['pending_bank_payments_count']; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+
                     <li class="nav-item <?php echo ($data['title'] == 'Inventory') ? 'active' : ''; ?>">
                         <a href="<?php echo URLROOT; ?>/sellers/inventory">
                             <i class="fas fa-warehouse"></i>

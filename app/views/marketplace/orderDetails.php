@@ -97,6 +97,51 @@
                         ?>
                     </p>
                 </div>
+
+                <?php if(isset($data['order']->PaymentMethod) && $data['order']->PaymentMethod == 'bank'): ?>
+                    <?php if(isset($data['bank_payment']) && $data['bank_payment']): ?>
+                        <div class="mp-order-details__section mp-order-details__bank-payment">
+                            <h3>Bank Payment Details</h3>
+                            <div class="mp-order-details__bank-payment-info">
+                                <p><strong>Status:</strong> 
+                                    <span class="badge badge-<?php echo $data['bank_payment']->Status === 'Pending' ? 'warning' : 
+                                        ($data['bank_payment']->Status === 'Verified' ? 'success' : 'danger'); ?>">
+                                        <?php echo $data['bank_payment']->Status; ?>
+                                    </span>
+                                </p>
+                                <p><strong>Upload Date:</strong> <?php echo date('F j, Y, g:i a', strtotime($data['bank_payment']->UploadDate)); ?></p>
+                                <?php if($data['bank_payment']->Status !== 'Pending'): ?>
+                                    <p><strong>Verification Date:</strong> <?php echo date('F j, Y, g:i a', strtotime($data['bank_payment']->VerificationDate)); ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if(!empty($data['bank_payment']->Notes)): ?>
+                                    <p><strong>Notes:</strong> <?php echo $data['bank_payment']->Notes; ?></p>
+                                <?php endif; ?>
+                                
+                                <div class="mp-order-details__slip-image">
+                                    <h4>Payment Slip</h4>
+                                    <?php 
+                                    $fileExt = pathinfo($data['bank_payment']->SlipFile, PATHINFO_EXTENSION);
+                                    if(in_array(strtolower($fileExt), ['jpg', 'jpeg', 'png', 'gif'])): ?>
+                                        <a href="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" target="_blank">
+                                            <img src="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" 
+                                                alt="Payment Slip" class="mp-order-details__payment-slip">
+                                        </a>
+                                    <?php elseif(strtolower($fileExt) === 'pdf'): ?>
+                                        <p>Payment slip uploaded as PDF. <a href="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" target="_blank">Click here to view.</a></p>
+                                    <?php else: ?>
+                                        <p>Payment slip uploaded. <a href="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" target="_blank">Click here to view.</a></p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="mp-order-details__section mp-order-details__bank-payment">
+                            <h3>Bank Payment Details</h3>
+                            <p>No payment slip has been uploaded yet.</p>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
                 
                 <div class="mp-order-details__section">
                     <h3>Order Updates</h3>

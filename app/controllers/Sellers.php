@@ -935,4 +935,29 @@ public function orderDetails($id) {
             redirect('sellers/delivery');
         }
     }
+
+
+    //payments methods
+
+
+// Bank payment verification page
+public function bankPayments() {
+    // Get seller info
+    $seller = $this->sellerModel->getSellerByUserId($_SESSION['user_id']);
+    
+    // Load bank payment model
+    $bankPaymentModel = $this->model('BankPayment');
+    
+    // Get pending bank payments
+    $pendingPayments = $bankPaymentModel->getPendingPayments();
+    
+    $data = [
+        'title' => 'Bank Payment Verification',
+        'seller' => $seller,
+        'payments' => $pendingPayments
+    ];
+    
+    $this->view('sellers/bank_payments', $data);
+}
+
 }
