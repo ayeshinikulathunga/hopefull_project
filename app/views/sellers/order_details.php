@@ -138,7 +138,8 @@
                         <div class="info-label">Payment Method:</div>
                         <div class="info-value">
                             <?php 
-                                $paymentMethod = $data['shipping']->PaymentMethod;
+                               $paymentMethod = !empty($data['order']->PaymentMethod) ? $data['order']->PaymentMethod : 
+                               ($data['shipping']->PaymentMethod ?? 'Not specified');
                                 switch($paymentMethod) {
                                     case 'cash_on_delivery':
                                         echo 'Cash on Delivery';

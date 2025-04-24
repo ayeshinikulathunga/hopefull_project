@@ -36,7 +36,7 @@ class Order {
     }
 
     // Create new order
-    public function createOrder($data) {
+    /*public function createOrder($data) {
         // Generate OrderID (Format: ORD + 5 random digits)
         $orderId = 'ORD' . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
         
@@ -67,7 +67,40 @@ class Order {
             error_log("Order creation error: " . $e->getMessage());
             return false;
         }
+    }*/
+
+   
+public function createOrder($data) {
+    // Generate OrderID (Format: ORD + 5 random digits)
+    $orderId = 'ORD' . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+    
+    // Start transaction
+    $this->db->beginTransaction();
+    
+    try {
+        // Insert order - now including PaymentMethod
+        $this->db->query('INSERT INTO orders (OrderID, UserID, OrderDate, TotalAmount, Status, PaymentMethod) 
+                         VALUES (:orderId, :userId, CURRENT_TIMESTAMP, :totalAmount, "Pending", :paymentMethod)');
+        
+        $this->db->bind(':orderId', $orderId);
+        $this->db->bind(':userId', $data['user_id']);
+        $this->db->bind(':totalAmount', $data['total_amount']);
+        $this->db->bind(':paymentMethod', $data['payment_method']);
+        
+        $this->db->execute();
+        
+        
+        // Commit transaction
+        $this->db->commit();
+        
+        return $orderId;
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        $this->db->rollBack();
+        error_log("Order creation error: " . $e->getMessage());
+        return false;
     }
+}
 
     // Add order item
     public function addOrderItem($data) {
@@ -95,25 +128,34 @@ class Order {
 
 
     // Get order by ID
-    public function getOrderById($orderId) {
-        $this->db->query('SELECT o.*, 
-                        u.Username,
-                        u.Email,
-                        sd.ShippingAddress,
-                        sd.ContactPhone,
-                        sd.PaymentMethod,
-                        sd.ShippingNotes
-                        FROM orders o
-                        JOIN users u ON o.UserID = u.UserID
-                        LEFT JOIN shipping_details sd ON o.OrderID = sd.OrderID
-                        WHERE o.OrderID = :orderId');
-        
-        $this->db->bind(':orderId', $orderId);
-        
-        $row = $this->db->single();
-        
-        return $row;
+   
+public function getOrderById($orderId) {
+    $this->db->query('SELECT o.*, 
+                    u.Username,
+                    u.Email,
+                    sd.ShippingAddress,
+                    sd.ContactPhone,
+                    sd.PaymentMethod AS SDPaymentMethod, 
+                    sd.ShippingNotes
+                    FROM orders o
+                    JOIN users u ON o.UserID = u.UserID
+                    LEFT JOIN shipping_details sd ON o.OrderID = sd.OrderID
+                    WHERE o.OrderID = :orderId');
+    
+    $this->db->bind(':orderId', $orderId);
+    
+    $row = $this->db->single();
+    
+    // Use the payment method from shipping_details if available, or from the orders table
+    if ($row) {
+        if (!empty($row->SDPaymentMethod) && (empty($row->PaymentMethod) || $row->PaymentMethod == '')) {
+            $row->PaymentMethod = $row->SDPaymentMethod;
+        }
     }
+    
+    return $row;
+}
+  
 
     // Get order items
 
