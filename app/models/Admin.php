@@ -210,5 +210,3 @@ public function editUser($data) {
 }
 ?>
 
-
-

@@ -58,7 +58,7 @@ class AdminInquiry {
 
     // Get recent inquiries (for dashboard)
     public function getRecentInquiries($limit = 5) {
-        $this->db->query("SELECT * FROM inquiries ORDER BY DateSubmitted DESC LIMIT :limit");
+        $this->db->query("SELECT * FROM inquiries WHERE Status = 'New' ORDER BY DateSubmitted DESC LIMIT :limit");
         $this->db->bind(':limit', $limit);
         return $this->db->resultSet();
     }
