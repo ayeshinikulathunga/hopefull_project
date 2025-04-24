@@ -9,7 +9,7 @@
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <!-- Success icon -->
                 <?php echo $_SESSION['admin_success']; ?>
-                <?php unset($_SESSION['admin_success']); // Clear the message after displaying ?>
+                <?php unset($_SESSION['admin_success']); ?>
             </div>
         <?php endif; ?>
 
