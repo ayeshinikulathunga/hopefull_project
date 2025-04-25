@@ -77,7 +77,7 @@ public function createPaymentRecord($data) {
             error_log("Payment status update result: " . ($result ? "Success" : "Failed"));
             
             if (!$result) {
-                error_log("SQL error: " . json_encode($this->db->getError()));
+                error_log("SQL error: " . $this->db->errorInfo()); 
             }
             
             return $result;
