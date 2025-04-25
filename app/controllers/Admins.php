@@ -5,18 +5,17 @@ class Admins extends Controller {
     private $adminInquiryModel;
     
     public function __construct() {
-        // Start session if not already started
+
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-        
-        // Check if user is logged in
+ 
         if (!isset($_SESSION['user_id'])) {
             header('Location: ' . URLROOT . '/users/login');
             exit;
         }
         
-        // Check if user is a system admin
+
         if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'SystemAdmin') {
             header('Location: ' . URLROOT . '/users/login');
             exit;
@@ -28,19 +27,17 @@ class Admins extends Controller {
     }
     
     public function index() {
-        // Redirect to the addUser  method
         header("Location: " . URLROOT . "/admins/addUser ");
         exit();
     }
 
     public function dashboard() {
-        // Fetch dashboard data
+
         $data = [
             'title' => 'Admin Dashboard',
             'user_counts' => $this->adminModel->getUserCounts(),
             'recent_users' => $this->adminModel->getRecentUsers(),
             'pending_verifications' => $this->adminModel->getPendingVerifications(),
-            // Add inquiry data for dashboard
             'inquiries' => $this->adminInquiryModel->getRecentInquiries(5),
             'new_inquiries' => $this->adminInquiryModel->countInquiriesByStatus('New'),
             'in_progress_inquiries' => $this->adminInquiryModel->countInquiriesByStatus('In Progress'),
@@ -51,7 +48,6 @@ class Admins extends Controller {
     }
     
     public function users() {
-        // Manage users - get all users by default
         $data = [
             'title' => 'Manage Users',
             'users' => $this->adminModel->getAllUsers()
@@ -70,12 +66,11 @@ class Admins extends Controller {
     }
     
     public function update_user_status() {
-        // Start session if not already started
+
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-        
-        // Ensure admin is logged in
+
         if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'SystemAdmin') {
             header('Location: ' . URLROOT . '/users/login');
             exit;
@@ -84,8 +79,7 @@ class Admins extends Controller {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {
             $userId = $_POST['user_id'];
             $status = $_POST['status'];
-            
-            // Set a session message
+     
             if($this->adminModel->updateUserStatus($userId, $status)) {
                 $_SESSION['admin_success'] = 'User status updated successfully!';
                 header('Location: ' . URLROOT . '/admins/users');
@@ -100,16 +94,15 @@ class Admins extends Controller {
     
     public function addUser () {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            // Validate form data
+ 
             $data = [
                 'email' => trim($_POST['Email']),
                 'username' => trim($_POST['Username']),
-                'password' => password_hash(trim($_POST['Password']), PASSWORD_DEFAULT), // Hash the password
+                'password' => password_hash(trim($_POST['Password']), PASSWORD_DEFAULT),
                 'user_type' => trim($_POST['user_type']),
                 'user_status' => trim($_POST['user_status'])
             ];
     
-            // Validate email format
             if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $_SESSION['admin_error'] = "Invalid email format.";
                 header("Location: " . URLROOT . "/admins/add_user");
@@ -117,28 +110,26 @@ class Admins extends Controller {
             }
     
     
-            // Call the model to add the user
+   
             if ($this->adminModel->addUser ($data)) {
                 $_SESSION['admin_success'] = "User  added successfully!";
-                // Redirect to the users list or dashboard instead of the add user page
+
                 header("Location: " . URLROOT . "/admins/users");
                 exit();
             } else {
                 $_SESSION['admin_error'] = "Error adding user.";
             }
     
-            // Redirect to the add user page in case of error
+    
             header("Location: " . URLROOT . "/admins/add_user");
             exit();
         }
     
-        // Load the view
         $data['title'] = 'Add User';
-        $this->view('admins/add_user', $data); // Call the view method
+        $this->view('admins/add_user', $data); 
     }
     
     public function editUser($id) {
-        // Fetch user by ID
         $user = $this->adminModel->getUserById($id);
     
         if (!$user) {
@@ -175,12 +166,12 @@ class Admins extends Controller {
     
     
     public function delete_user() {
-        // Start session if not already started
+ 
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
         
-        // Ensure admin is logged in
+   
         if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'SystemAdmin') {
             header('Location: ' . URLROOT . '/users/login');
             exit;
@@ -189,7 +180,7 @@ class Admins extends Controller {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {
             $userId = $_POST['user_id'];
             
-            // Try to delete user
+    
             if($this->adminModel->deleteUser($userId)) {
                 $_SESSION['admin_success'] = 'User deleted successfully';
                 header('Location: ' . URLROOT . '/admins/users');
@@ -200,7 +191,7 @@ class Admins extends Controller {
                 exit;
             }
         } else {
-            // Redirect to users page if not POST
+      
             header('Location: ' . URLROOT . '/admins/users');
             exit;
         }
@@ -208,12 +199,12 @@ class Admins extends Controller {
     
 
     public function verify_recipient() {
-        // Start session if not already started
+     
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
         
-        // Ensure admin is logged in
+ 
         if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'SystemAdmin') {
             header('Location: ' . URLROOT . '/users/login');
             exit;
@@ -222,7 +213,7 @@ class Admins extends Controller {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {
             $recipientId = $_POST['recipient_id'];
             $status = $_POST['status'];
-            $moderatorId = $_SESSION['user_id']; // Current admin's user ID
+            $moderatorId = $_SESSION['user_id']; 
             
             if($this->adminModel->verifyRecipient($recipientId, $status, $moderatorId)) {
                 $_SESSION['admin_success'] = 'Recipient verification updated successfully';
@@ -238,10 +229,10 @@ class Admins extends Controller {
 
     public function approve() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $recipientId = $_POST['recipient_id']; // Get the recipient ID from the POST data
-            $status = 'Approved'; // Set the status to Approved
+            $recipientId = $_POST['recipient_id']; 
+            $status = 'Approved'; 
             
-            // Call the model method to update the verification status
+        
             if ($this->adminModel->verifyRecipient($recipientId, $status)) {
                 $_SESSION['admin_success'] = 'Recipient approved successfully';
                 header('Location: ' . URLROOT . '/admins/verifications');
@@ -252,7 +243,7 @@ class Admins extends Controller {
                 exit;
             }
         } else {
-            // Redirect to verifications page if not POST
+   
             header('Location: ' . URLROOT . '/admins/verifications');
             exit;
         }
@@ -280,11 +271,7 @@ class Admins extends Controller {
         }
     }
 
-    // START OF NEW INQUIRY FUNCTIONS
-    
-    /**
-     * Display a list of all inquiries
-     */
+  
     public function inquiries() {
         $data = [
             'title' => 'Manage Inquiries',
@@ -297,10 +284,7 @@ class Admins extends Controller {
         $this->view('admins/inquiries/index', $data);
     }
     
-    /**
-     * Display a single inquiry
-     * @param int $id The inquiry ID
-     */
+  
     public function view_inquiry($id) {
         $inquiry = $this->adminInquiryModel->getInquiryById($id);
         
@@ -318,9 +302,7 @@ class Admins extends Controller {
         $this->view('admins/inquiries/view', $data);
     }
     
-    /**
-     * Update the status of an inquiry
-     */
+
     public function update_inquiry_status() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $inquiryId = $_POST['inquiry_id'];
