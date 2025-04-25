@@ -7,7 +7,7 @@
         <div class="card-body">
         <?php if (isset($_SESSION['admin_success'])): ?>
             <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <!-- Success icon -->
+                <i class="fas fa-check-circle"></i> 
                 <?php echo $_SESSION['admin_success']; ?>
                 <?php unset($_SESSION['admin_success']); ?>
             </div>
@@ -15,9 +15,9 @@
 
         <?php if (isset($_SESSION['admin_error'])): ?>
             <div class="alert alert-danger">
-                <i class="fas fa-times-circle"></i> <!-- Error icon -->
+                <i class="fas fa-times-circle"></i> 
                 <?php echo $_SESSION['admin_error']; ?>
-                <?php unset($_SESSION['admin_error']); // Clear the message after displaying ?>
+                <?php unset($_SESSION['admin_error']);  ?>
             </div>
         <?php endif; ?>
                     

@@ -69,7 +69,7 @@ class RegionalOfficers extends Controller {
             $inventoryItems = $this->regionalOfficerModel->getInventoryItems($_SESSION['regional_officer_id']);
             
             $data = [
-                'title' => 'Regional Inventory Management',
+                'title' => 'Inventory Management',
                 'inventoryItems' => $inventoryItems
             ];
             
@@ -232,49 +232,85 @@ class RegionalOfficers extends Controller {
 
     public function allocate() {
         try {
-            $donationStatus = $this->regionalOfficerModel->getNonMonetaryDonationStatus($_SESSION['regional_officer_id']);
-            $cancellationRequests = $this->regionalOfficerModel->getPendingCancellationRequests($_SESSION['regional_officer_id']);
+            // Get donation status
+            $donationStatus = $this->regionalOfficerModel->getNonMonetaryDonationStatus();
+            
+            // Get cancellation requests
+            $cancellationRequests = $this->regionalOfficerModel->getPendingCancellationRequests();
             
             $data = [
-                'title' => 'Donation Allocation',
-                'donation_status' => $donationStatus,
-                'cancellation_requests' => $cancellationRequests
+                'title' => 'Non-Monetary Donations Tracking',
+                'donation_status' => $donationStatus ?: [],
+                'cancellation_requests' => $cancellationRequests ?: [],
+                'errors' => []
             ];
+            
+            // If no data found, set appropriate messages
+            if(empty($donationStatus)) {
+                $data['errors']['donation_status'] = 'No donation records found';
+            }
+            
+            if(empty($cancellationRequests)) {
+                $data['errors']['cancellation_requests'] = 'No cancellation requests found';
+            }
             
             $this->view('regionalOfficers/allocate', $data);
         } catch (Exception $e) {
-            // Temporarily comment out the redirect for testing
-            // flash('error', 'Error loading allocation page: ' . $e->getMessage(), 'alert alert-danger');
-            // redirect('regionalOfficers/dashboard');
-            echo "Error: " . $e->getMessage(); // For testing purposes
+            // Log error
+            error_log("Error in allocation: " . $e->getMessage());
+            
+            // Load view with error message
+            $data = [
+                'title' => 'Donation Allocation',
+                'donation_status' => [],
+                'cancellation_requests' => [],
+                'errors' => ['general' => 'An error occurred while loading data']
+            ];
+            
+            $this->view('regionalOfficers/allocate', $data);
         }
     }
 
-public function markReceived() {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $donationId = $_POST['donation_id'];
-        
-        if ($this->regionalOfficerModel->markDonationReceived($donationId)) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to update status']);
+    public function markReceived() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $donationId = $_POST['donation_id'];
+            
+            if ($this->regionalOfficerModel->markReceived($donationId)) {
+                flash('success_message', 'Donation marked as received successfully');
+            } else {
+                flash('error_message', 'Failed to mark donation as received', 'alert alert-danger');
+            }
+            
+            redirect('regionalOfficers/allocate');
         }
     }
-}
 
-public function approveCancellation() {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $donationId = $_POST['donation_id'];
-        
-        if ($this->regionalOfficerModel->approveCancellation($donationId)) {
-            flash('success_message', 'Cancellation approved successfully');
-        } else {
-            flash('error_message', 'Failed to approve cancellation', 'alert alert-danger');
+    public function markPending() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $donationId = $_POST['donation_id'];
+            
+            if ($this->regionalOfficerModel->markPending($donationId)) {
+                flash('success_message', 'Donation status changed back to Pending');
+            } else {
+                flash('error_message', 'Failed to update donation status', 'alert alert-danger');
+            }
+            
+            redirect('regionalOfficers/allocate');
         }
-        
-        redirect('regionalOfficers/allocate');
     }
-}
+    
+    public function approveCancellation() {
+        $donationId = $_POST['donation_id'];
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->regionalOfficerModel->approveCancellation($donationId)) {
+                flash('success_message', 'Cancellation approved successfully');
+            } else {
+                flash('error_message', 'Failed to approve cancellation', 'alert alert-danger');
+            }
+            
+            redirect('regionalOfficers/allocate');
+        }
+    }
 
 public function rejectCancellation() {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {

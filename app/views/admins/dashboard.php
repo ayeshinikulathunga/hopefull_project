@@ -4,7 +4,7 @@
     <div class="alert alert-success">
         <?php 
             echo $_SESSION['admin_success']; 
-            unset($_SESSION['admin_success']); // Clear the message after displaying
+            unset($_SESSION['admin_success']); 
         ?>
     </div>
 <?php endif; ?>
@@ -13,7 +13,7 @@
     <div class="alert alert-danger">
         <?php 
             echo $_SESSION['admin_error']; 
-            unset($_SESSION['admin_error']); // Clear the message after displaying
+            unset($_SESSION['admin_error']); 
         ?>
     </div>
 <?php endif; ?>
@@ -105,7 +105,6 @@
         </table>
     </div>
     
-    <!-- Inquiries Card - Improved Layout -->
     <div class="dashboard-card inquiries">
         <h3>Inquiries</h3>
         <?php if(isset($data['inquiries']) && !empty($data['inquiries'])): ?>

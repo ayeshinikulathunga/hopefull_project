@@ -46,7 +46,6 @@
                                 <option value="SystemAdmin">System Admin</option>
                                 <option value="AuthModerator">Authentication Moderator</option>
                                 <option value="RegionalOfficer">Regional Officer</option>
-                                <option value="DeliveryOfficer">Delivery Officer</option>
                             </select>
                         </div>
                         <div class="form-group">
