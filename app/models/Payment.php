@@ -57,6 +57,9 @@ public function createPaymentRecord($data) {
     // Update payment status
     public function updatePaymentStatus($paymentId, $status, $reference = null, $details = null) {
         try {
+            // Add logging to debug
+            error_log("Attempting to update payment ID: {$paymentId} to status: {$status}");
+            
             $this->db->query('UPDATE payments 
                            SET Status = :status, 
                                PaymentReference = :reference,
@@ -69,7 +72,15 @@ public function createPaymentRecord($data) {
             $this->db->bind(':details', $details);
             $this->db->bind(':paymentId', $paymentId);
             
-            return $this->db->execute();
+            $result = $this->db->execute();
+            
+            error_log("Payment status update result: " . ($result ? "Success" : "Failed"));
+            
+            if (!$result) {
+                error_log("SQL error: " . json_encode($this->db->getError()));
+            }
+            
+            return $result;
         } catch (Exception $e) {
             error_log("Update payment status error: " . $e->getMessage());
             return false;
