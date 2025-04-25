@@ -986,9 +986,10 @@ class Marketplace extends Controller {
     }
     
     // PayHere Payment Success
-    public function paymentSuccess() {
+    /*public function paymentSuccess() {
         // Handle return from PayHere after successful payment
-        
+        error_log('PayHere payment success callback triggered. Data: ' . json_encode($_POST));
+    error_log('PayHere success $_SESSION: ' . json_encode($_SESSION));
         // Check if there's a PayHere order in session
         if (!isset($_SESSION['payhere_order_id'])) {
             redirect('marketplace/orders');
@@ -1024,12 +1025,63 @@ class Marketplace extends Controller {
         
         flash('order_message', 'Payment was cancelled. You can try again later.', 'alert alert-warning');
         redirect('marketplace/orderDetails/' . $orderId);
+    }*/
+
+    public function paymentSuccess($orderId = null) {
+        // Log information for debugging
+        error_log('PayHere payment success callback triggered. OrderID: ' . $orderId);
+        error_log('PayHere success $_SESSION: ' . json_encode($_SESSION));
+        
+        // Check if order ID is provided via URL parameter
+        if (!$orderId && isset($_SESSION['payhere_order_id'])) {
+            // Fall back to session variable if URL parameter is not provided
+            $orderId = $_SESSION['payhere_order_id'];
+        }
+        
+        // Redirect to orders page if no order ID is available
+        if (!$orderId) {
+            flash('order_error', 'Order information is missing', 'alert alert-danger');
+            redirect('marketplace/orders');
+        }
+        
+        // Get the payment record for this order
+        $payment = $this->paymentModel->getPaymentByOrderId($orderId);
+        
+        // If payment record exists, update its status
+        if ($payment) {
+            // Update payment status to Completed
+            $this->paymentModel->updatePaymentStatus(
+                $payment->ID,
+                'Completed',
+                null,
+                'Updated via return URL'
+            );
+            error_log("Updated payment ID {$payment->ID} to Completed");
+        } else {
+            error_log("No payment record found for order: {$orderId}");
+        }
+        
+        // Update order status to Processing since payment is successful
+        $this->orderModel->updateOrderStatus($orderId, 'Processing');
+        error_log("Updated order {$orderId} to Processing");
+        
+        // Clear the PayHere session variables if they exist
+        if (isset($_SESSION['payhere_order_id'])) {
+            unset($_SESSION['payhere_order_id']);
+        }
+        if (isset($_SESSION['payhere_payment_id'])) {
+            unset($_SESSION['payhere_payment_id']);
+        }
+        
+        // Flash success message and redirect to order confirmation
+        flash('order_message', 'Payment successful! Your order is being processed.', 'alert alert-success');
+        redirect('marketplace/orderConfirmation/' . $orderId);
     }
     
     // PayHere Payment Notification
     public function paymentNotify() {
         // This endpoint will receive server-to-server notifications from PayHere
-        
+        error_log('PayHere payment notification callback triggered. Data: ' . json_encode($_POST));
         // This should be accessible without a session, as PayHere servers will call it
         
         // Get the POST data
@@ -1103,6 +1155,8 @@ class Marketplace extends Controller {
         
         exit;
     }
+
+   
 
        
 
