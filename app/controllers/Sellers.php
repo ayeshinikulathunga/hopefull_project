@@ -36,7 +36,6 @@ class Sellers extends Controller {
     }
     
     // Dashboard
-    // Update the dashboard method in your Sellers controller
 
 public function dashboard() {
     // Get seller info
