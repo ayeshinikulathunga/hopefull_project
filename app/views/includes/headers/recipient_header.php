@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/styles.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/requests.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/recipient_feedback.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/profile.css">
     <style>
         /* User Sidebar Styles */
 
@@ -29,7 +30,7 @@
                 <a href="<?php echo URLROOT; ?>/recipients/dashboard" class="sidebar-menu-item">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
-                <a href="<?php echo URLROOT; ?>/recipients/profile" class="sidebar-menu-item">
+                <a href="<?php echo URLROOT; ?>/recipientProfile" class="sidebar-menu-item">
                     <i class="fas fa-user-circle"></i> My Profile
                 </a>
                 <a href="<?php echo URLROOT; ?>/recipients/createRequest" class="sidebar-menu-item">
