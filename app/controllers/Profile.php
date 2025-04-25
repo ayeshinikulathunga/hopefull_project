@@ -80,6 +80,7 @@ class Profile extends Controller {
 
         // Load view
         $this->view('donors/profile', $data);
+        $this->badgeModel->getAllBadgesDebug();
 
         
     }
@@ -303,4 +304,26 @@ class Profile extends Controller {
         echo json_encode($calendarData);
         exit;
     }
+
+    // Add to Profile.php controller
+public function checkBadges() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirect('profile');
+        return;
+    }
+    
+    $donorId = $_SESSION['donor_id'];
+    $badgeModel = $this->model('Badge');
+    $awardedBadges = $badgeModel->checkAndAwardBadges($donorId);
+    
+    if (!empty($awardedBadges)) {
+        flash('profile_success', 'You\'ve earned ' . count($awardedBadges) . ' new badges!');
+        $badges = $this->badgeModel->getDonorBadges($donorId);
+        $data['badges'] = $badges;
+    } else {
+        flash('profile_message', 'No new badges available at this time.');
+    }
+    
+    redirect('profile');
+}
 }

@@ -47,13 +47,13 @@
                         <h2>Payment Method</h2>
                         
                         <div class="donation-checkout__payment-options">
-                            <div class="donation-checkout__payment-option">
-                                <input type="radio" id="payment_card" name="payment_method" value="credit_card" checked>
-                                <label for="payment_card">
-                                    <i class="fas fa-credit-card"></i>
-                                    Credit/Debit Card
-                                </label>
-                            </div>
+                        <div class="donation-checkout__payment-option">
+                            <input type="radio" id="payment_payhere" name="payment_method" value="payhere" checked>
+                            <label for="payment_payhere">
+                                <i class="fas fa-credit-card"></i>
+                                Pay Online (PayHere)
+                            </label>
+                        </div>
                             
                             <div class="donation-checkout__payment-option">
                                 <input type="radio" id="payment_bank" name="payment_method" value="bank_transfer">
@@ -73,7 +73,7 @@
                         </div>
                         
                         <!-- Credit Card Form (displayed by default) -->
-                        <div id="creditCardForm" class="credit-card-form">
+                        <!--<div id="creditCardForm" class="credit-card-form">
                             <div class="form-group">
                                 <label for="card_name">Cardholder Name</label>
                                 <input type="text" id="card_name" name="card_name" class="form-control" placeholder="Name on card">
@@ -95,7 +95,7 @@
                                     <input type="text" id="cvv" name="cvv" class="form-control" placeholder="123">
                                 </div>
                             </div>
-                        </div>
+                        </div>-->
                         
                         <!-- Bank Transfer Info (hidden by default) -->
                         <div id="bankTransferInfo" class="payment-info" style="display: none;">
@@ -296,10 +296,10 @@
         });
         
         // Payment method switching
-        const paymentCardRadio = document.getElementById('payment_card');
+        const paymentPayhereRadio = document.getElementById('payment_payhere');
         const paymentBankRadio = document.getElementById('payment_bank');
         const paymentMobileRadio = document.getElementById('payment_mobile');
-        const creditCardForm = document.getElementById('creditCardForm');
+        //const creditCardForm = document.getElementById('creditCardForm');
         const bankTransferInfo = document.getElementById('bankTransferInfo');
         const mobilePaymentInfo = document.getElementById('mobilePaymentInfo');
         const summaryPaymentMethod = document.getElementById('summaryPaymentMethod');
@@ -312,6 +312,14 @@
                 summaryPaymentMethod.textContent = 'Credit/Debit Card';
             }
         });
+
+        paymentPayhereRadio.addEventListener('change', function() {
+        if(this.checked) {
+            bankTransferInfo.style.display = 'none';
+            summaryPaymentMethod.textContent = 'Pay Online (PayHere)';
+        }
+    });
+    
         
         paymentBankRadio.addEventListener('change', function() {
             if(this.checked) {

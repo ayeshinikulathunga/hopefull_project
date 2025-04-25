@@ -69,6 +69,8 @@ class Donation {
             // If all operations successful, commit transaction
             if($donationResult && $updateResult && $donorUpdateResult) {
                 $this->db->commit();
+                $badgeModel = new Badge();
+                $badgeModel->checkAndAwardBadges($data['donorId']);
                 return $donationId;
             } else {
                 $this->db->rollBack();
@@ -82,7 +84,7 @@ class Donation {
         }
     }
 
-    private function checkMonetaryRequestCompletion($requestId) {
+    public function checkMonetaryRequestCompletion($requestId) {
         // Get monetary donation details
         $this->db->query('SELECT md.TargetAmount, md.CurrentAmount 
                          FROM monetary_donation_details md 
@@ -823,6 +825,190 @@ public function markFeedbackAsRead($feedbackId, $donorId) {
     return $this->db->execute();
 }
 
+// Add these methods to your Donation.php model
+
+/**
+ * Create a payment record for a donation
+ * @param array $data Payment data
+ * @return int|bool Payment ID or false on failure
+ */
+public function createDonationPaymentRecord($data) {
+    try {
+        // Create donation_payments table if it doesn't exist
+        $this->db->query("CREATE TABLE IF NOT EXISTS `donation_payments` (
+            `ID` int(11) NOT NULL AUTO_INCREMENT,
+            `DonationID` varchar(10) NOT NULL,
+            `PaymentAmount` decimal(10,2) NOT NULL,
+            `PaymentMethod` varchar(50) NOT NULL,
+            `Status` enum('Pending','Completed','Failed','Cancelled') DEFAULT 'Pending',
+            `PaymentReference` varchar(50) DEFAULT NULL,
+            `PaymentDetails` text DEFAULT NULL,
+            `CreatedDate` datetime DEFAULT current_timestamp(),
+            `ProcessedDate` datetime DEFAULT NULL,
+            PRIMARY KEY (`ID`),
+            KEY `DonationID` (`DonationID`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+        
+        $this->db->execute();
+        
+        // Insert payment record
+        $this->db->query('INSERT INTO donation_payments (DonationID, PaymentAmount, PaymentMethod, Status, PaymentReference, PaymentDetails) 
+                         VALUES (:donationId, :paymentAmount, :paymentMethod, :status, :paymentReference, :paymentDetails)');
+        
+        $this->db->bind(':donationId', $data['donation_id']);
+        $this->db->bind(':paymentAmount', $data['payment_amount']);
+        $this->db->bind(':paymentMethod', $data['payment_method']);
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':paymentReference', $data['payment_reference'] ?? null);
+        $this->db->bind(':paymentDetails', $data['payment_details'] ?? null);
+        
+        if ($this->db->execute()) {
+            return $this->db->getLastInsertId();
+        } else {
+            return false;
+        }
+    } catch (Exception $e) {
+        error_log("Create donation payment record error: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Update payment status for a donation
+ * @param int $paymentId Payment ID
+ * @param string $status New status
+ * @param string|null $reference Payment reference
+ * @param string|null $details Payment details
+ * @return bool True if successful, false otherwise
+ */
+public function updateDonationPaymentStatus($paymentId, $status, $reference = null, $details = null) {
+    try {
+        $this->db->query('UPDATE donation_payments 
+                       SET Status = :status, 
+                           PaymentReference = :reference,
+                           PaymentDetails = :details,
+                           ProcessedDate = CURRENT_TIMESTAMP
+                       WHERE ID = :paymentId');
+        
+        $this->db->bind(':status', $status);
+        $this->db->bind(':reference', $reference);
+        $this->db->bind(':details', $details);
+        $this->db->bind(':paymentId', $paymentId);
+        
+        if ($this->db->execute()) {
+            // If payment is completed, update the donation status
+            if ($status == 'Completed') {
+                // Get the donation ID from the payment record
+                $this->db->query('SELECT DonationID FROM donation_payments WHERE ID = :paymentId');
+                $this->db->bind(':paymentId', $paymentId);
+                $payment = $this->db->single();
+                
+                if ($payment) {
+                    // Update the donation status to Completed
+                    $this->db->query('UPDATE donations 
+                                     SET Status = "Completed" 
+                                     WHERE DonationID = :donationId');
+                    $this->db->bind(':donationId', $payment->DonationID);
+                    $this->db->execute();
+                    
+                    // Get donation details to update monetary requests
+                    $this->db->query('SELECT * FROM donations WHERE DonationID = :donationId');
+                    $this->db->bind(':donationId', $payment->DonationID);
+                    $donation = $this->db->single();
+                    
+                    if ($donation && $donation->DonationType == 'Monetary') {
+                        // Update monetary donation details
+                        $this->db->query('UPDATE monetary_donation_details 
+                                         SET CurrentAmount = CurrentAmount + :amount 
+                                         WHERE RequestID = :requestId');
+                        $this->db->bind(':amount', $donation->Amount);
+                        $this->db->bind(':requestId', $donation->RequestID);
+                        $this->db->execute();
+                        
+                        // Update donor statistics
+                        $this->db->query('UPDATE donors 
+                                         SET TotalDonations = TotalDonations + :amount, 
+                                             DonationCount = DonationCount + 1 
+                                         WHERE DonorID = :donorId');
+                        $this->db->bind(':amount', $donation->Amount);
+                        $this->db->bind(':donorId', $donation->DonorID);
+                        $this->db->execute();
+                        
+                        // Check if request is complete
+                        $this->checkMonetaryRequestCompletion($donation->RequestID);
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    } catch (Exception $e) {
+        error_log("Update donation payment status error: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get payment by donation ID
+ * @param string $donationId The donation ID
+ * @return object|bool Payment record or false if not found
+ */
+public function getPaymentByDonationId($donationId) {
+    try {
+        $this->db->query('SELECT * FROM donation_payments WHERE DonationID = :donationId ORDER BY CreatedDate DESC LIMIT 1');
+        $this->db->bind(':donationId', $donationId);
+        
+        return $this->db->single();
+    } catch (Exception $e) {
+        error_log("Get payment by donation ID error: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get payment by ID
+ * @param int $paymentId The payment ID
+ * @return object|bool Payment record or false if not found
+ */
+public function getDonationPaymentById($paymentId) {
+    try {
+        $this->db->query('SELECT * FROM donation_payments WHERE ID = :paymentId');
+        $this->db->bind(':paymentId', $paymentId);
+        
+        return $this->db->single();
+    } catch (Exception $e) {
+        error_log("Get donation payment by ID error: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Verify PayHere signature for donations
+ * @param array $data Payment data from PayHere
+ * @param string $signature Signature to verify
+ * @return bool True if signature is valid
+ */
+public function verifyPayHereSignature($data, $signature) {
+    // Sort the data array alphabetically by key
+    ksort($data);
+    
+    // Create the hash input string
+    $hash_input = '';
+    foreach ($data as $key => $value) {
+        if ($key != 'signature') {
+            $hash_input .= $value;
+        }
+    }
+    
+    // Add the merchant secret
+    $hash_input = DONATION_PAYHERE_MERCHANT_SECRET . $hash_input;
+    
+    // Calculate the hash
+    $calculated_signature = md5($hash_input);
+    
+    // Compare with the received signature
+    return $calculated_signature === $signature;
+}
 
 
 }

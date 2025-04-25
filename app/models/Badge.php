@@ -37,12 +37,26 @@ class Badge {
         return $result ? $result->badgeCount : 0;
     }
 
+    public function getAllBadgesDebug() {
+        $this->db->query('SELECT * FROM badges');
+        $badges = $this->db->resultSet();
+        
+        // Output debug info
+        error_log("Available badges in system:");
+        foreach($badges as $badge) {
+            error_log("ID: {$badge->BadgeID}, Name: {$badge->BadgeName}");
+        }
+        
+        return $badges;
+    }
+
     public function checkAndAwardBadges($donorId) {
         // Get donor statistics
         $this->db->query('SELECT TotalDonations, DonationCount FROM donors WHERE DonorID = :donorId');
         $this->db->bind(':donorId', $donorId);
         $donorStats = $this->db->single();
         
+        error_log("Badge Check for donor {$donorId}: TotalDonations: {$donorStats->TotalDonations}, DonationCount: {$donorStats->DonationCount}");
         if(!$donorStats) {
             return false;
         }

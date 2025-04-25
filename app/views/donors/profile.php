@@ -120,7 +120,7 @@
                                 <div class="badge-card" title="<?php echo $badge->Description; ?>">
                                     <div class="badge-icon">
                                         <?php if($badge->BadgeImage) : ?>
-                                            <img src="<?php echo URLROOT; ?>/public/img/badges/<?php echo $badge->BadgeImage; ?>" alt="<?php echo $badge->BadgeName; ?>">
+                                            <img src="<?php echo URLROOT; ?>/public/images/badges/<?php echo $badge->BadgeImage; ?>" alt="<?php echo $badge->BadgeName; ?>">
                                         <?php else : ?>
                                             <i class="fas fa-medal"></i>
                                         <?php endif; ?>

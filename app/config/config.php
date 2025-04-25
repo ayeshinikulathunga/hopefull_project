@@ -28,6 +28,15 @@ define('PAYHERE_CANCEL_URL', URLROOT . '/marketplace/paymentCancelled');
 define('PAYHERE_NOTIFY_URL', URLROOT . '/marketplace/paymentNotify');
 
 
+// Donation PayHere Configuration
+define('DONATION_PAYHERE_MERCHANT_ID', '1230270');
+define('DONATION_PAYHERE_MERCHANT_SECRET', 'MjAwNzMxOTc4NTYyMjM5NjkxNDY5NDIyOTQyNDE2MzIyNjIwMQ==');
+define('DONATION_PAYHERE_SANDBOX', true); 
+define('DONATION_PAYHERE_RETURN_URL', URLROOT . '/donations/paymentSuccess');
+define('DONATION_PAYHERE_CANCEL_URL', URLROOT . '/donations/paymentCancelled');
+define('DONATION_PAYHERE_NOTIFY_URL', URLROOT . '/donations/paymentNotify');
+
+
 
 
 
