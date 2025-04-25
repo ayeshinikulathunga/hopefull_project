@@ -1,13 +1,13 @@
 <?php require APPROOT . '/views/includes/headers/recipient_header.php'; ?>
 
 <div class="container feedback-history-page-container">
-    <!-- Flash Messages -->
+  
     <?php flash('feedback_message'); ?>
     
     <div class="feedback-history-container">
         <div class="history-header">
             <div class="header-left">
-                <a href="<?php echo URLROOT; ?>/recipients/dashboard" class="btn btn-sm btn-outline">
+                <a href="<?php echo URLROOT; ?>/recipients/dashboard" class="btn1 btn1-sm btn1-outline">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
                 <h1>Feedback History</h1>
@@ -22,7 +22,7 @@
                 </div>
                 <h3>No Feedback Sent Yet</h3>
                 <p>You haven't sent any impact feedback to donors yet. When you send feedback, it will appear here.</p>
-                <a href="<?php echo URLROOT; ?>/recipients/requests" class="btn btn-primary">
+                <a href="<?php echo URLROOT; ?>/recipients/requests" class="btn1 btn1-primary">
                     View My Requests
                 </a>
             </div>
@@ -61,10 +61,12 @@
                         </div>
                         
                         <div class="feedback-actions">
-                            <a href="<?php echo URLROOT; ?>/recipients/deleteFeedback/<?php echo $feedback->FeedbackID; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this feedback?');">
+                        <form action="<?php echo URLROOT; ?>/recipients/deleteFeedback/<?php echo $feedback->FeedbackID; ?>" method="POST" style="display:inline;">
+                            <button type="submit" class="btn1 btn1-sm btn1-danger" onclick="return confirm('Are you sure you want to delete this feedback?');">
                                 <i class="fas fa-trash"></i> Delete
-                            </a>
-                        </div>
+                            </button>
+                        </form>
+                    </div>
                     </div>
                 <?php endforeach; ?>
             </div>

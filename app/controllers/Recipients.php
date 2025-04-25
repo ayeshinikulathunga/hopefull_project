@@ -2,6 +2,7 @@
 class Recipients extends Controller {
     private $userModel;
     private $recipientModel;
+    private $feedbackModel;
     
     public function __construct() {
         // Check if user is logged in and is a recipient
@@ -15,6 +16,7 @@ class Recipients extends Controller {
         
         $this->userModel = $this->model('User');
         $this->recipientModel = $this->model('Recipient');
+        $this->feedbackModel = $this->model('Feedback');
     }
     
     // Default method - redirects to dashboard
@@ -66,7 +68,7 @@ class Recipients extends Controller {
             
             // Initialize data with all potential fields
             $data = [
-                'title' => 'Create Donation Request',
+                'title' => trim($_POST['title'] ?? ''),
                 'recipientId' => $_SESSION['recipient_id'],
                 'requestType' => trim($_POST['requestType'] ?? ''),
                 'category' => trim($_POST['category'] ?? ''),
@@ -665,85 +667,8 @@ class Recipients extends Controller {
         redirect('recipients/requests');
     }
     
-    // View profile and settings
-    public function profile() {
-        // Get recipient data
-        $recipient = $this->recipientModel->getRecipientById($_SESSION['recipient_id']);
-        
-        // If form is submitted
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Process form data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
-            
-            // Initialize data with form fields
-            $data = [
-                'title' => 'My Profile',
-                'recipient' => $recipient,
-                'firstName' => trim($_POST['firstName']),
-                'lastName' => trim($_POST['lastName']),
-                'contactNumber' => trim($_POST['contactNumber']),
-                'address' => trim($_POST['address']),
-                'organizationType' => trim($_POST['organizationType']),
-                'firstName_err' => '',
-                'lastName_err' => '',
-                'contactNumber_err' => '',
-                'address_err' => ''
-            ];
-            
-            // Validate inputs
-            if(empty($data['firstName'])) {
-                $data['firstName_err'] = 'Please enter your first name';
-            }
-            
-            if(empty($data['lastName'])) {
-                $data['lastName_err'] = 'Please enter your last name';
-            }
-            
-            if(empty($data['contactNumber'])) {
-                $data['contactNumber_err'] = 'Please enter a contact number';
-            }
-            
-            if(empty($data['address'])) {
-                $data['address_err'] = 'Please enter your address';
-            }
-            
-            // If no errors, update profile
-            if(empty($data['firstName_err']) && empty($data['lastName_err']) && 
-               empty($data['contactNumber_err']) && empty($data['address_err'])) {
-                
-                // Update recipient profile
-                $updateResult = $this->recipientModel->updateRecipient($_SESSION['recipient_id'], $data);
-                
-                if($updateResult) {
-                    flash('profile_message', 'Profile updated successfully');
-                    redirect('recipients/profile');
-                } else {
-                    flash('profile_message', 'Something went wrong when updating your profile', 'alert alert-danger');
-                    $this->view('recipients/profile', $data);
-                }
-            } else {
-                // Load view with errors
-                $this->view('recipients/profile', $data);
-            }
-        } else {
-            // First time loading the page
-            $data = [
-                'title' => 'My Profile',
-                'recipient' => $recipient,
-                'firstName' => $recipient->FirstName,
-                'lastName' => $recipient->LastName,
-                'contactNumber' => $recipient->ContactNumber,
-                'address' => $recipient->Address,
-                'organizationType' => $recipient->OrganizationType,
-                'firstName_err' => '',
-                'lastName_err' => '',
-                'contactNumber_err' => '',
-                'address_err' => ''
-            ];
-            
-            $this->view('recipients/profile', $data);
-        }
-    }
+   
+  
     
     // View donation statistics
     public function statistics() {
@@ -953,5 +878,35 @@ public function feedbackHistory() {
     
     $this->view('recipients/feedback_history', $data);
 }
+
+/**
+ * Delete a feedback report
+ * @param string $feedbackId The feedback ID
+ * @return void
+ */
+public function deleteFeedback($feedbackId = null) {
+    // Check if feedback ID is provided
+    if(!$feedbackId) {
+        flash('feedback_message', 'Invalid feedback', 'alert alert-danger');
+        redirect('recipients/feedbackHistory');
+    }
+    
+    // Only process POST requests for security
+    if($_SERVER['REQUEST_METHOD'] != 'POST') {
+        redirect('recipients/feedbackHistory');
+    }
+    
+    // Attempt to delete the feedback report
+    if($this->feedbackModel->deleteFeedback($feedbackId, $_SESSION['recipient_id'])) {
+        flash('feedback_message', 'Feedback deleted successfully');
+    } else {
+        flash('feedback_message', 'Unable to delete this feedback', 'alert alert-danger');
+    }
+    
+    redirect('recipients/feedbackHistory');
+}
+
+//get total donations for a recipient
+
 
 }

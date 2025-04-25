@@ -176,9 +176,6 @@ class Donation {
         return $this->db->resultSet();
     }
 
-
-
-
     /**
  * Get all donations for a specific donor with pagination
  * @param string $donorId The donor ID

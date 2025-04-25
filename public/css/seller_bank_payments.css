@@ -1,0 +1,662 @@
+/* 
+ * Bank Payments Verification Stylesheet for Hopefull Marketplace
+ * This CSS uses namespaced classes to avoid conflicts with other styles
+ */
+
+/* Import base variables without overriding them */
+@import 'variables.css';
+
+/* General Container Styles */
+.seller-bank-payments,
+.seller-bank-slip-details {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 150px);
+}
+
+/* Section Header */
+.seller-bank-payments .section-header,
+.seller-bank-slip-details .slip-header {
+    margin-bottom: 25px;
+}
+
+.seller-bank-payments .section-header h2,
+.seller-bank-slip-details .slip-header h2 {
+    display: flex;
+    align-items: center;
+    color: #343a40;
+    margin-bottom: 10px;
+    font-size: 1.75rem;
+}
+
+.seller-bank-payments .section-header h2 i,
+.seller-bank-slip-details .slip-header h2 i {
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+.seller-bank-payments .section-header p {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+/* Tab Navigation */
+.seller-bank-payments .bank-payment-tabs {
+    display: flex;
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.seller-bank-payments .bank-payment-tab-btn {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.seller-bank-payments .bank-payment-tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.seller-bank-payments .bank-payment-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.seller-bank-payments .bank-payment-tab-content {
+    display: none;
+}
+
+.seller-bank-payments .bank-payment-tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Table Styles */
+.seller-bank-payments .bank-payment-table {
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.seller-bank-payments .bank-payment-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.seller-bank-payments .bank-payment-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.seller-bank-payments .bank-payment-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Order Link Style */
+.seller-bank-payments .order-link,
+.seller-bank-slip-details .order-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.seller-bank-payments .order-link:hover,
+.seller-bank-slip-details .order-link:hover {
+    text-decoration: underline;
+    color: var(--primary-dark);
+}
+
+/* Payment Slip Thumbnail */
+.seller-bank-payments .slip-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.seller-bank-payments .slip-preview-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    text-decoration: none;
+}
+
+.seller-bank-payments .slip-preview-link span {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.seller-bank-payments .slip-preview-link:hover .slip-thumbnail {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Status Badge Styles */
+.seller-bank-payments .status-badge,
+.seller-bank-slip-details .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.seller-bank-payments .status-pending,
+.seller-bank-slip-details .status-pending {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.seller-bank-payments .status-verified,
+.seller-bank-slip-details .status-verified {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.seller-bank-payments .status-rejected,
+.seller-bank-slip-details .status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.seller-bank-payments .status-processing,
+.seller-bank-slip-details .status-processing {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+/* Action Buttons */
+.seller-bank-payments .action-buttons,
+.seller-bank-slip-details .slip-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* No Data Message */
+.seller-bank-payments .no-data-container,
+.seller-bank-slip-details .no-data-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.seller-bank-payments .no-data-message,
+.seller-bank-slip-details .no-data-message {
+    text-align: center;
+    background-color: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    max-width: 500px;
+}
+
+.seller-bank-payments .no-data-message i,
+.seller-bank-slip-details .no-data-message i {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 15px;
+    opacity: 0.6;
+}
+
+.seller-bank-payments .no-data-message h3,
+.seller-bank-slip-details .no-data-message h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #343a40;
+    font-size: 1.5rem;
+}
+
+.seller-bank-payments .no-data-message p,
+.seller-bank-slip-details .no-data-message p {
+    margin: 0;
+    color: #6c757d;
+}
+
+/* Bank Slip Details Page Specific Styles */
+.seller-bank-slip-details .back-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--primary-color);
+    text-decoration: none;
+    margin-bottom: 15px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.seller-bank-slip-details .back-link i {
+    margin-right: 8px;
+}
+
+.seller-bank-slip-details .back-link:hover {
+    color: var(--primary-dark);
+}
+
+.seller-bank-slip-details .slip-details-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.seller-bank-slip-details .slip-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.seller-bank-slip-details .slip-info-card,
+.seller-bank-slip-details .slip-image-card,
+.seller-bank-slip-details .slip-order-items-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.seller-bank-slip-details .slip-info-card h3,
+.seller-bank-slip-details .slip-image-card h3,
+.seller-bank-slip-details .slip-order-items-card h3 {
+    display: flex;
+    align-items: center;
+    color: #343a40;
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 1.25rem;
+}
+
+.seller-bank-slip-details .slip-info-card h3 i,
+.seller-bank-slip-details .slip-image-card h3 i,
+.seller-bank-slip-details .slip-order-items-card h3 i {
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+.seller-bank-slip-details .info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.seller-bank-slip-details .info-row {
+    display: flex;
+    align-items: center;
+}
+
+.seller-bank-slip-details .info-label {
+    width: 120px;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.seller-bank-slip-details .info-value {
+    flex: 1;
+}
+
+.seller-bank-slip-details .price-value {
+    font-weight: 600;
+    color: #28a745;
+}
+
+.seller-bank-slip-details .slip-image-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.seller-bank-slip-details .slip-image {
+    max-width: 100%;
+    max-height: 500px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    cursor: zoom-in;
+    transition: all 0.3s ease;
+}
+
+.seller-bank-slip-details .slip-image:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.seller-bank-slip-details .slip-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.seller-bank-slip-details .slip-notes {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border-left: 4px solid #6c757d;
+}
+
+.seller-bank-slip-details .slip-notes h4 {
+    display: flex;
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #495057;
+    font-size: 1rem;
+}
+
+.seller-bank-slip-details .slip-notes h4 i {
+    margin-right: 8px;
+    color: #6c757d;
+}
+
+.seller-bank-slip-details .slip-notes p {
+    margin: 0;
+    color: #495057;
+    white-space: pre-line;
+}
+
+.seller-bank-slip-details .no-items {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.seller-bank-slip-details .order-items-table th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.seller-bank-slip-details .order-items-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.seller-bank-slip-details .item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.seller-bank-slip-details .item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.seller-bank-slip-details .item-image.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e9ecef;
+    color: #adb5bd;
+}
+
+.seller-bank-slip-details .item-details h4 {
+    margin: 0 0 5px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.seller-bank-slip-details .item-id {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.seller-bank-slip-details .text-right {
+    text-align: right;
+}
+
+/* Modal Styling - Namespace to avoid conflicts */
+.seller-bank-payments .modal,
+.seller-bank-slip-details .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s;
+}
+
+.seller-bank-payments .modal-content,
+.seller-bank-slip-details .modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    animation: slideIn 0.3s;
+}
+
+.seller-bank-payments .close,
+.seller-bank-slip-details .close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #adb5bd;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.seller-bank-payments .close:hover,
+.seller-bank-slip-details .close:hover {
+    color: #343a40;
+}
+
+.seller-bank-payments .modal h2,
+.seller-bank-slip-details .modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #343a40;
+    font-weight: 600;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.seller-bank-payments .modal-actions,
+.seller-bank-slip-details .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.seller-bank-payments .form-group,
+.seller-bank-slip-details .form-group {
+    margin-bottom: 15px;
+}
+
+.seller-bank-payments .form-group label,
+.seller-bank-slip-details .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #343a40;
+}
+
+.seller-bank-payments .form-control,
+.seller-bank-slip-details .form-control {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.seller-bank-payments .form-control:focus,
+.seller-bank-slip-details .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Animation Keyframes */
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Make sure button styles are properly namespaced */
+.seller-bank-payments .btn,
+.seller-bank-slip-details .btn {
+    display: inline-flex;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: none;
+    text-decoration: none;
+}
+
+.seller-bank-payments .btn-sm,
+.seller-bank-slip-details .btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+.seller-bank-payments .btn-primary,
+.seller-bank-slip-details .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.seller-bank-payments .btn-primary:hover,
+.seller-bank-slip-details .btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.seller-bank-payments .btn-secondary,
+.seller-bank-slip-details .btn-secondary {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.seller-bank-payments .btn-secondary:hover,
+.seller-bank-slip-details .btn-secondary:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.seller-bank-payments .btn-success,
+.seller-bank-slip-details .btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.seller-bank-payments .btn-success:hover,
+.seller-bank-slip-details .btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+.seller-bank-payments .btn-danger,
+.seller-bank-slip-details .btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.seller-bank-payments .btn-danger:hover,
+.seller-bank-slip-details .btn-danger:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .seller-bank-payments .action-buttons,
+    .seller-bank-slip-details .slip-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .seller-bank-slip-details .slip-image {
+        max-height: 350px;
+    }
+    
+    .seller-bank-payments .bank-payment-tab-btn {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .seller-bank-payments .bank-payment-table th,
+    .seller-bank-payments .bank-payment-table td,
+    .seller-bank-slip-details .order-items-table th,
+    .seller-bank-slip-details .order-items-table td {
+        padding: 10px 8px;
+        font-size: 0.9rem;
+    }
+    
+    .seller-bank-payments .bank-payment-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .seller-bank-payments .slip-thumbnail {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .seller-bank-slip-details .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .seller-bank-slip-details .info-label {
+        width: 100%;
+    }
+    
+    .seller-bank-slip-details .modal-content,
+    .seller-bank-payments .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 20px;
+    }
+}

@@ -83,13 +83,10 @@ class Database {
         return $this->dbh->rollBack();
     }
 
-  
 
     public function getLastInsertId() {
         return $this->dbh->lastInsertId();
     }
-
-  
 
 
 

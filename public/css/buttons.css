@@ -23,17 +23,19 @@
 
 /* Outline Button */
 .btn-outline {
-    background-color: transparent;;
-    border: 1px solid var(--primary);
+    background-color: transparent;
     color: black;
-    border-radius: 30px;
-  }
-  
-  .btn-outline:hover {
-    background-color:#afcdf6;
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-  }
+    border: 3px solid var(--primary-color);
+    min-width: 100px;
+   border-radius: 40px;
+}
+
+.btn-outline:hover {
+    background-color: var(--primary-lighter);
+    color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(93, 135, 255, 0.2);
+}
   
   
   
@@ -51,7 +53,7 @@
     color: var(--text-white);
     border: none;
     border-radius: 30px;
-    max-width: 30px;
+    width: auto;
 }
 
 .btn-primary:hover {

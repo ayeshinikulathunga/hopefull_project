@@ -1,116 +1,101 @@
 <?php
-class Profile extends Controller {
-    private $donorModel;
-    private $donationModel;
+class RecipientProfile extends Controller {
+    private $recipientModel;
+    private $donationRequestModel;
     private $userModel;
-    private $badgeModel;
+    private $feedbackModel;
     private $db;
-  
 
     public function __construct() {
-        // Check if user is logged in and is a donor
+        // Check if user is logged in and is a recipient
         if (!isLoggedIn()) {
             redirect('users/login');
-        }
-        
-        // Only allow donors to access this controller
-        if ($_SESSION['user_type'] !== 'Donor') {
-            // If not a donor, redirect to appropriate profile
-            if ($_SESSION['user_type'] === 'Recipient') {
-                redirect('recipients/profile');
-            } else {
-                // Handle other user types or show error
-                redirect('users/login');
-            }
+        } else if ($_SESSION['user_type'] !== 'Recipient') {
+            redirect('users/login');
         }
 
+        // Initialize database instance
         $this->db = new Database();
 
         // Load models
-        $this->donorModel = $this->model('Donor');
-        $this->donationModel = $this->model('Donation');
+        $this->recipientModel = $this->model('Recipient');
+        $this->donationRequestModel = $this->model('DonationRequest');
         $this->userModel = $this->model('User');
-        $this->badgeModel = $this->model('Badge');
-     
+        $this->feedbackModel = $this->model('Feedback');
     }
 
     /**
-     * Display donor profile page
+     * Display recipient profile page
      */
     public function index() {
-        // Get donor ID from session
-        $donorId = $_SESSION['donor_id'];
+        // Get recipient ID from session
+        $recipientId = $_SESSION['recipient_id'];
 
-        // Get donor data
-        $donor = $this->donorModel->getDonorById($donorId);
+        // Get recipient data
+        $recipient = $this->recipientModel->getRecipientById($recipientId);
         
         // Get user data (for email, etc.)
         $user = $this->userModel->getUserById($_SESSION['user_id']);
 
-        // Get donor statistics
-        $stats = $this->donorModel->getDonorStats($donorId);
+        // Get recipient statistics
+        $stats = $this->recipientModel->getRecipientStatistics($recipientId);
 
-        // Get donor ranking (position in leaderboard)
-        $ranking = $this->donorModel->getDonorRanking($donorId);
+        // Get donation requests
+        $requests = $this->recipientModel->getRequestsByRecipient($recipientId);
         
-        // Get top donors for leaderboard (limit to top 10)
-        $topDonors = $this->donorModel->getTopDonors(10);
+        // Get recent donations
+        $recentDonations = $this->recipientModel->getRecentDonationsForRecipient($recipientId, 5);
         
-        // Get pending donations for calendar
-        $pendingDonations = $this->donationModel->getPendingNonMonetaryDonations($donorId);
+        // Get upcoming deadlines for active requests
+        $upcomingDeadlines = $this->recipientModel->getUpcomingDeadlines($recipientId);
         
-        // Get upcoming donations for the next 30 days
-        $upcomingDonations = $this->donationModel->getUpcomingDonations($donorId, 30);
-        
-        // Get badges earned by the donor
-        $badges = $this->badgeModel->getDonorBadges($donorId);
+        // Get feedback metrics
+        $feedbackMetrics = $this->feedbackModel->getFeedbackMetricsForRecipient($recipientId);
 
         // Prepare data for the view
         $data = [
             'title' => 'My Profile',
-            'donor' => $donor,
+            'recipient' => $recipient,
             'user' => $user,
             'stats' => $stats,
-            'ranking' => $ranking,
-            'topDonors' => $topDonors,
-            'pendingDonations' => $pendingDonations,
-            'upcomingDonations' => $upcomingDonations,
-            'badges' => $badges
+            'requests' => $requests,
+            'recentDonations' => $recentDonations,
+            'upcomingDeadlines' => $upcomingDeadlines,
+            'feedbackMetrics' => $feedbackMetrics
         ];
 
         // Load view
-        $this->view('donors/profile', $data);
-
-        
+        $this->view('recipients/profile', $data);
     }
 
     /**
-     * Update donor profile
+     * Update recipient profile
      */
     public function updateProfile() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('profile');
+            redirect('recipientProfile');
             return;
         }
 
         // Sanitize POST data
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
-        // Get donor ID from session
-        $donorId = $_SESSION['donor_id'];
+        // Get recipient ID from session
+        $recipientId = $_SESSION['recipient_id'];
         $userId = $_SESSION['user_id'];
 
         // Prepare data for update
         $data = [
-            'donorId' => $donorId,
+            'recipientId' => $recipientId,
             'userId' => $userId,
             'firstName' => trim($_POST['firstName']),
             'lastName' => trim($_POST['lastName']),
             'contactNumber' => trim($_POST['contactNumber']),
-            'anonymousPreference' => isset($_POST['anonymousPreference']) ? 1 : 0,
+            'address' => trim($_POST['address']),
             'firstName_err' => '',
             'lastName_err' => '',
-            'contactNumber_err' => ''
+            'contactNumber_err' => '',
+            'address_err' => ''
         ];
 
         // Validate firstName
@@ -128,20 +113,27 @@ class Profile extends Controller {
             $data['contactNumber_err'] = 'Please enter contact number';
         }
 
+        // Validate address
+        if (empty($data['address'])) {
+            $data['address_err'] = 'Please enter address';
+        }
+
         // Make sure no errors
-        if (empty($data['firstName_err']) && empty($data['lastName_err']) && empty($data['contactNumber_err'])) {
-            // Update donor profile
-            if ($this->donorModel->updateDonor($data)) {
+        if (empty($data['firstName_err']) && empty($data['lastName_err']) && 
+            empty($data['contactNumber_err']) && empty($data['address_err'])) {
+            
+            // Update recipient profile
+            if ($this->recipientModel->updateRecipient($data)) {
                 flash('profile_success', 'Your profile has been updated successfully');
-                redirect('profile');
+                redirect('recipientProfile');
             } else {
                 flash('profile_error', 'Something went wrong when updating your profile', 'alert alert-danger');
-                redirect('profile');
+                redirect('recipientProfile');
             }
         } else {
             // Load view with errors
             flash('profile_error', 'Please fix the errors below', 'alert alert-danger');
-            redirect('profile');
+            redirect('recipientProfile');
         }
     }
 
@@ -150,7 +142,7 @@ class Profile extends Controller {
      */
     public function changePassword() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('profile');
+            redirect('recipientProfile');
             return;
         }
 
@@ -200,15 +192,15 @@ class Profile extends Controller {
             // Update password
             if ($this->userModel->updatePassword($userId, $data['new_password'])) {
                 flash('profile_success', 'Your password has been updated successfully');
-                redirect('profile');
+                redirect('recipientProfile');
             } else {
                 flash('profile_error', 'Something went wrong when updating your password', 'alert alert-danger');
-                redirect('profile');
+                redirect('recipientProfile');
             }
         } else {
             // Load view with errors
             flash('profile_error', 'Please fix the errors below', 'alert alert-danger');
-            redirect('profile');
+            redirect('recipientProfile');
         }
     }
 
@@ -217,36 +209,35 @@ class Profile extends Controller {
      */
     public function deleteAccount() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('profile');
+            redirect('recipientProfile');
             return;
         }
 
-        // Get user ID and donor ID from session
+        // Get user ID and recipient ID from session
         $userId = $_SESSION['user_id'];
-        $donorId = $_SESSION['donor_id'];
+        $recipientId = $_SESSION['recipient_id'];
 
         // Check if confirmation password is provided
         if (empty($_POST['confirmation_password'])) {
             flash('profile_error', 'Please enter your password to confirm account deletion', 'alert alert-danger');
-            redirect('profile');
+            redirect('recipientProfile');
             return;
         }
 
         // Verify password
         if (!$this->userModel->verifyPassword($userId, $_POST['confirmation_password'])) {
             flash('profile_error', 'Password is incorrect', 'alert alert-danger');
-            redirect('profile');
+            redirect('recipientProfile');
             return;
         }
 
         // Begin transaction to ensure all records are deleted properly
-        $this->db = new Database;
         $this->db->beginTransaction();
 
         try {
-            // Delete donor record
-            if (!$this->donorModel->deleteDonor($donorId)) {
-                throw new Exception('Failed to delete donor record');
+            // Delete recipient record
+            if (!$this->recipientModel->deleteRecipient($recipientId)) {
+                throw new Exception('Failed to delete recipient record');
             }
 
             // Delete user record
@@ -269,33 +260,48 @@ class Profile extends Controller {
             
             // Show error message
             flash('profile_error', 'Something went wrong when deleting your account: ' . $e->getMessage(), 'alert alert-danger');
-            redirect('profile');
+            redirect('recipientProfile');
         }
     }
 
     /**
-     * Get donor's calendar data in JSON format
+     * Get request calendar data in JSON format
      */
     public function getCalendarData() {
         // Set header to return JSON
         header('Content-Type: application/json');
         
-        // Get donor ID from session
-        $donorId = $_SESSION['donor_id'];
+        // Get recipient ID from session
+        $recipientId = $_SESSION['recipient_id'];
         
-        // Get pending donations for the next 6 months
-        $upcomingDonations = $this->donationModel->getUpcomingDonations($donorId, 180);
+        // Get active requests with deadlines
+        $requests = $this->recipientModel->getActiveRequestsWithDeadlines($recipientId);
         
-        // Format donations for calendar
+        // Get scheduled donation drop-offs
+        $dropOffs = $this->recipientModel->getScheduledDropOffs($recipientId);
+        
+        // Format data for calendar
         $calendarData = [];
         
-        foreach ($upcomingDonations as $donation) {
+        // Add request deadlines
+        foreach ($requests as $request) {
             $calendarData[] = [
-                'id' => $donation->DonationID,
-                'title' => $donation->ItemName . ' - ' . $donation->Title,
-                'start' => $donation->DropOffDate . 'T' . $donation->DropOffTime,
-                'url' => URLROOT . '/donations/donationDetails/' . $donation->DonationID,
-                'className' => 'calendar-event-donation'
+                'id' => 'req_' . $request->RequestID,
+                'title' => 'Deadline: ' . $request->Title,
+                'start' => $request->Deadline,
+                'url' => URLROOT . '/recipients/viewRequest/' . $request->RequestID,
+                'className' => 'calendar-event-deadline'
+            ];
+        }
+        
+        // Add donation drop-offs
+        foreach ($dropOffs as $dropOff) {
+            $calendarData[] = [
+                'id' => 'drop_' . $dropOff->DonationID,
+                'title' => 'Drop-off: ' . ($dropOff->ItemName ?? 'Donation'),
+                'start' => $dropOff->DropOffDate . 'T' . $dropOff->DropOffTime,
+                'url' => URLROOT . '/recipients/viewDonation/' . $dropOff->DonationID,
+                'className' => 'calendar-event-dropoff'
             ];
         }
         
