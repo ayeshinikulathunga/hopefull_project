@@ -11,6 +11,7 @@
     <!-- Main Stylesheets -->
 
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/admin.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/userStyles.css">
 </head>
 <body class="admin-panel">
     <div class="admin-layout">

@@ -64,7 +64,8 @@
                 <p>Pending Requests</p>
             </div>
             <?php if(count($data['pendingRequests']) > 0): ?>
-                <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="card-action">View Requests</a>
+                <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="btn btn-primary btn-sm">View Requests</a>
+
             <?php endif; ?>
         </div>
     </div>
@@ -83,14 +84,14 @@
         <div class="dashboard-card">
             <div class="card-header-with-action">
                 <h3>Recent Inventory Items</h3>
-                <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory" class="btn-sm btn-primary">Manage Inventory</a>
+                <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory" class="btn btn-primary btn-sm">Manage Inventory</a>
             </div>
             
             <?php if(empty($data['inventoryItems'])): ?>
                 <div class="empty-state">
                     <i class="fas fa-boxes"></i>
                     <p>No inventory items added yet</p>
-                    <a href="<?php echo URLROOT; ?>/regionalOfficers/addItem" class="btn btn-primary">Add First Item</a>
+                    <a href="<?php echo URLROOT; ?>/regionalOfficers/addItem" class="btn btn-primary btn-sm">Add First Item</a>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
@@ -120,7 +121,8 @@
                     </table>
                     <?php if(count($data['inventoryItems']) > 5): ?>
                         <div class="see-all">
-                            <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory">See All Items</a>
+                            <a href="<?php echo URLROOT; ?>/regionalOfficers/inventory" class="btn btn-primary btn-sm">See All Items</a>
+                            
                         </div>
                     <?php endif; ?>
                 </div>
@@ -132,7 +134,7 @@
     <div class="dashboard-card">
         <div class="card-header-with-action">
             <h3>Pending Donation Requests</h3>
-            <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="btn-sm btn-primary">View All</a>
+            <a href="<?php echo URLROOT; ?>/regionalOfficers/requests" class="btn btn-primary btn-sm">View All</a>
         </div>
         
         <?php if(empty($data['pendingRequests'])): ?>

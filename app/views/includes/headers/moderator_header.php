@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/styles.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/admin.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/userStyles.css">
 </head>
 <body class="admin-panel">
     <div class="admin-layout">

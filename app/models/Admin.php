@@ -23,13 +23,48 @@ class Admin {
             UserID, 
             Email, 
             Username, 
-            UserType, 
+            UserType,
+            UserStatus, 
             RegisteredDate 
             FROM users 
             ORDER BY RegisteredDate DESC 
             LIMIT :limit');
         
         $this->db->bind(':limit', $limit);
+        return $this->db->resultSet();
+    }
+
+    // Get all users with optional filtering
+    public function getAllUsers($userType = null, $userStatus = null) {
+        $sql = 'SELECT 
+            UserID, 
+            Email, 
+            Username, 
+            UserType,
+            UserStatus, 
+            RegisteredDate 
+            FROM users WHERE 1=1';
+            
+        if($userType) {
+            $sql .= ' AND UserType = :userType';
+        }
+        
+        if($userStatus) {
+            $sql .= ' AND UserStatus = :userStatus';
+        }
+        
+        $sql .= ' ORDER BY RegisteredDate DESC';
+        
+        $this->db->query($sql);
+        
+        if($userType) {
+            $this->db->bind(':userType', $userType);
+        }
+        
+        if($userStatus) {
+            $this->db->bind(':userStatus', $userStatus);
+        }
+        
         return $this->db->resultSet();
     }
 
@@ -58,18 +93,120 @@ class Admin {
         return $this->db->execute();
     }
 
-    // Verify recipient
-    public function verifyRecipient($recipientId, $status, $moderatorId) {
-        $this->db->query('UPDATE recipients 
-            SET VerificationStatus = :status, 
-                ModeratorID = :moderatorId, 
-                ApprovalDate = CURRENT_TIMESTAMP 
-            WHERE RecipientID = :recipientId');
+    // Add new user
+    // Add new user
+public function addUser ($data) {
+    // Generate a UserID that starts with 'U' and is followed by a unique number
+    do {
+        $userID = 'U' . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+        $this->db->query("SELECT * FROM users WHERE UserID = :userid");
+        $this->db->bind(':userid', $userID);
+        $this->db->execute();
+        $existing = $this->db->rowCount();
+    } while ($existing > 0);
+    
+    // Construct the SQL query with the values directly
+    $query = "INSERT INTO users (UserID, Email, Username, PasswordHash, UserType, UserStatus) 
+              VALUES ('$userID', :email, :username, :password_hash, :user_type, :user_status)";
+
+    // Execute the query
+    $this->db->query($query); // Use query to execute the SQL statement
+
+    // Bind the parameters
+    $this->db->bind(':email', $data['email']);
+    $this->db->bind(':username', $data['username']);
+    $this->db->bind(':password_hash', $data['password']); // Store the hashed password
+    $this->db->bind(':user_type', $data['user_type']);
+    $this->db->bind(':user_status', $data['user_status']);
+
+    // Execute the query and return the result
+    return $this->db->execute(); // Returns true on success
+}
+
+public function getUserById($id) {
+    $this->db->query("SELECT * FROM users WHERE UserID = :id");
+    $this->db->bind(':id', $id);
+    return $this->db->single();
+}
+
+public function editUser($data) {
+    $this->db->query("UPDATE users SET Email = :email, Username = :username, UserType = :user_type, UserStatus = :user_status WHERE UserID = :userID");
+    
+    $this->db->bind(':email', $data['email']);
+    $this->db->bind(':username', $data['username']);
+    $this->db->bind(':user_type', $data['user_type']);
+    $this->db->bind(':user_status', $data['user_status']);
+    $this->db->bind(':userID', $data['userID']);
+
+    return $this->db->execute();
+}
+
+
+
+    // Delete user
+    public function deleteUser($userId) {
+        $this->db->query('DELETE FROM users WHERE UserID = :userId');
+        $this->db->bind(':userId', $userId);
         
+        return $this->db->execute();
+    }
+
+    // Verify recipient
+    public function verifyRecipient($recipientId, $status) {
+        $this->db->query('UPDATE recipients 
+                          SET VerificationStatus = :status 
+                          WHERE RecipientID = :recipientId');
         $this->db->bind(':status', $status);
-        $this->db->bind(':moderatorId', $moderatorId);
         $this->db->bind(':recipientId', $recipientId);
         
         return $this->db->execute();
     }
+
+    public function approve($recipientID) {
+        $this->db->query('UPDATE recipients SET VerificationStatus = :status WHERE RecipientID = :recipientID');
+        $this->db->bind(':status', 'Approved'); // Use a string for the status
+        $this->db->bind(':recipientID', $recipientID);
+        
+        return $this->db->execute(); // Execute the query
+    }
+    
+    public function reject($recipientID) {
+        $this->db->query('UPDATE recipients SET VerificationStatus = :status WHERE RecipientID = :recipientID');
+        $this->db->bind(':status', 'Rejected'); // Use a string for the status
+        $this->db->bind(':recipientID', $recipientID);
+        
+        return $this->db->execute(); // Execute the query
+    }
+
+    public function generateUserId() {
+        do {
+            // Generate a random 5-digit number
+            $randomNumber = rand(10000, 99999);
+            $userId = 'U' . $randomNumber;
+    
+            // Check if the user ID already exists in the database
+            $query = "SELECT COUNT(*) FROM users WHERE UserID = :userId";
+            $this->db->query($query);
+            $this->db->bind(':userId', $userId);
+            $count = $this->db->single(); 
+    
+        } while ($count > 0); 
+    
+        return $userId; 
+    }
+
+
+    public function getInquiries() {
+        $this->db->query("SELECT * FROM inquiries WHERE Status = 'New' ORDER BY DateSubmitted DESC");
+        return $this->db->resultSet();
+    }
+    
+    public function markInquiryReplied($inquiryId) {
+        $this->db->query("UPDATE inquiries SET Status = 'Completed' WHERE InquiryID = :inquiry_id");
+        $this->db->bind(':inquiry_id', $inquiryId);
+        return $this->db->execute();
+    }
+
 }
+?>
+
