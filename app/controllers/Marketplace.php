@@ -7,9 +7,6 @@ class Marketplace extends Controller {
     private $sellerModel;
     private $db;
 
-    
-
-    
 
     private $paymentModel;
 

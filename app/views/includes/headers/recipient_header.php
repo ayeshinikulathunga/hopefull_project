@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/styles.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/requests.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/recipient_feedback.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/feedback_history.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/profile.css">
     <style>
         /* User Sidebar Styles */
@@ -61,9 +62,9 @@
             </div>
             
             <div class="nav-links">
-                <a href="<?php echo URLROOT; ?>/recipinets/dashboard">Home</a>
+                <a href="<?php echo URLROOT; ?>/recipients/dashboard">Home</a>
                 <a href="<?php echo URLROOT; ?>/recipients/requests">My Requests</a>
-                <a href="<?php echo URLROOT; ?>/about">About</a>
+                <a href="<?php echo URLROOT; ?>/recipients/createRequest">Create Request</a>
                 
                 <!-- Notification Icon with Pending Updates Badge -->
                 <a href="<?php echo URLROOT; ?>/notifications" class="notification-icon">

@@ -2,6 +2,7 @@
 class Recipients extends Controller {
     private $userModel;
     private $recipientModel;
+    private $feedbackModel;
     
     public function __construct() {
         // Check if user is logged in and is a recipient
@@ -15,6 +16,7 @@ class Recipients extends Controller {
         
         $this->userModel = $this->model('User');
         $this->recipientModel = $this->model('Recipient');
+        $this->feedbackModel = $this->model('Feedback');
     }
     
     // Default method - redirects to dashboard
@@ -66,7 +68,7 @@ class Recipients extends Controller {
             
             // Initialize data with all potential fields
             $data = [
-                'title' => 'Create Donation Request',
+                'title' => trim($_POST['title'] ?? ''),
                 'recipientId' => $_SESSION['recipient_id'],
                 'requestType' => trim($_POST['requestType'] ?? ''),
                 'category' => trim($_POST['category'] ?? ''),
@@ -876,5 +878,35 @@ public function feedbackHistory() {
     
     $this->view('recipients/feedback_history', $data);
 }
+
+/**
+ * Delete a feedback report
+ * @param string $feedbackId The feedback ID
+ * @return void
+ */
+public function deleteFeedback($feedbackId = null) {
+    // Check if feedback ID is provided
+    if(!$feedbackId) {
+        flash('feedback_message', 'Invalid feedback', 'alert alert-danger');
+        redirect('recipients/feedbackHistory');
+    }
+    
+    // Only process POST requests for security
+    if($_SERVER['REQUEST_METHOD'] != 'POST') {
+        redirect('recipients/feedbackHistory');
+    }
+    
+    // Attempt to delete the feedback report
+    if($this->feedbackModel->deleteFeedback($feedbackId, $_SESSION['recipient_id'])) {
+        flash('feedback_message', 'Feedback deleted successfully');
+    } else {
+        flash('feedback_message', 'Unable to delete this feedback', 'alert alert-danger');
+    }
+    
+    redirect('recipients/feedbackHistory');
+}
+
+//get total donations for a recipient
+
 
 }

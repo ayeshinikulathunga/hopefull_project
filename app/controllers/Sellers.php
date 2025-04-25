@@ -159,7 +159,6 @@ public function index() {
     }
     
 
-
 public function addProduct() {
     // Get seller info
     $seller = $this->sellerModel->getSellerByUserId($_SESSION['user_id']);
@@ -483,7 +482,6 @@ public function editProduct($id) {
         $this->view('sellers/edit_product', $data);
     }
 }
-
 
 
 public function deleteProduct($id) {

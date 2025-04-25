@@ -41,7 +41,7 @@
                     
                     <div class="form-group">
                         <label for="title">Request Title <span class="required">*</span></label>
-                        <input type="text" name="title" id="title" class="form-control <?php echo (!empty($data['title_err'])) ? 'is-invalid' : ''; ?>" value="<?php echo $data['title']; ?>" maxlength="100" required>
+                        <input type="text" name="title" id="title" class="form-control <?php echo (!empty($data['title_err'])) ? 'is-invalid' : ''; ?>" value="<?php echo $data['title']; ?>" placeholder="Enter your request title" maxlength="100" required>
                         <span class="error-text"><?php echo $data['title_err']; ?></span>
                     </div>
                     

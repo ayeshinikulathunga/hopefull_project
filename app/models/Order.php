@@ -158,7 +158,6 @@ public function getOrderById($orderId) {
   
 
     // Get order items
-
     public function getOrderItems($orderId) {
         try {
             // Always include the ProductImage column in the query

@@ -2,8 +2,6 @@
 class Users extends Controller {
     private $userModel;
    
-
- 
     public function __construct() {
         // Ensure the user model is always loaded
         $this->userModel = $this->model('User');
@@ -12,16 +10,12 @@ class Users extends Controller {
         redirect('users/login');
     }
 
-   
-
     public function register() {
         $data = [
             'title' => 'Register'
         ];
         $this->view('users/register', $data);
     }
-
- 
 
     public function register_donor() {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {

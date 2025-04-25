@@ -9,7 +9,7 @@
     <div class="hero-content container">
         <h1>Welcome, <?php echo $data['recipient']->FirstName; ?></h1>
         <p>Your dashboard for monitoring donation requests and impact</p>
-        <a href="<?php echo URLROOT; ?>/recipients/requests" class="btn btn-primary"> New Request</a>
+        <a href="<?php echo URLROOT; ?>/recipients/createRequest" class="btn btn-primary">New Request</a>
     </div>
 </div>
 
@@ -89,7 +89,7 @@
         <div class="requests-section">
             <div class="section-header">
                 <h2>Your Donation Requests</h2>
-                <a href="<?php echo URLROOT; ?>/requests/create" class="btn btn-sm btn-primary">New Request</a>
+                <a href="<?php echo URLROOT; ?>/recipients/createRequest" class="btn btn-sm btn-primary">New Request</a>
             </div>
             
             <?php if(empty($data['requests'])) : ?>
@@ -97,7 +97,7 @@
                     <img src="<?php echo URLROOT; ?>/images/empty-state.svg" alt="No requests" class="empty-state-img">
                     <h3>No Requests Yet</h3>
                     <p>You haven't created any donation requests yet.</p>
-                    <a href="<?php echo URLROOT; ?>/requests/create" class="btn btn-primary">Create Your First Request</a>
+                    <a href="<?php echo URLROOT; ?>/recipients/createRequest" class="btn btn-primary">Create Your First Request</a>
                 </div>
             <?php else : ?>
                 <div class="table-responsive">
@@ -149,10 +149,10 @@
                 </td>
                 <td data-label="Actions">
                     <div class="actions-cell">
-                        <a href="<?php echo URLROOT; ?>/requests/view/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="View Details">
+                        <a href="<?php echo URLROOT; ?>/recipients/viewRequest/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="View Details">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo URLROOT; ?>/requests/edit/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="Edit">
+                        <a href="<?php echo URLROOT; ?>/recipients/editRequest/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
                     </div>

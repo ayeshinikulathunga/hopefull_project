@@ -127,7 +127,6 @@
 
 .btn-outline:hover {
     background-color: var(--primary-lighter);
-
     color: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(93, 135, 255, 0.2);

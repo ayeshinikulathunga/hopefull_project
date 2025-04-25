@@ -2,8 +2,11 @@
 
 <div class="seller-order-details">
     <?php flash('order_message'); ?>
+<<<<<<< HEAD
+=======
     <?php flash('cancellation_message'); ?>
     <?php flash('cancellation_error'); ?>
+>>>>>>> cd92d372a120695a1d0602d06341b236d9fb1dd0
     
     <div class="order-header">
         <div class="back-link">
@@ -56,6 +59,8 @@
             </div>
         </div>
         
+<<<<<<< HEAD
+=======
         <!-- Cancellation Request Information (if exists) -->
         <?php if(isset($data['cancellation_request']) && $data['cancellation_request']): ?>
         <div class="info-card cancellation-info-card">
@@ -121,6 +126,7 @@
         </div>
         <?php endif; ?>
         
+>>>>>>> cd92d372a120695a1d0602d06341b236d9fb1dd0
         <!-- Shipping Information -->
         <div class="info-card">
             <h3><i class="fas fa-shipping-fast"></i> Shipping Information</h3>
@@ -292,6 +298,8 @@
             </form>
         </div>
     </div>
+<<<<<<< HEAD
+=======
     
     <!-- Process Cancellation Modal -->
     <div id="processCancellationModal" class="modal">
@@ -315,6 +323,7 @@
             </form>
         </div>
     </div>
+>>>>>>> cd92d372a120695a1d0602d06341b236d9fb1dd0
 </div>
 
 <script>
@@ -358,6 +367,8 @@
         addTrackingModal.style.display = 'none';
     });
     
+<<<<<<< HEAD
+=======
     // Process cancellation modal functionality
     const processCancellationModal = document.getElementById('processCancellationModal');
     const processBtns = document.querySelectorAll('.process-btn');
@@ -404,6 +415,7 @@
         });
     }
     
+>>>>>>> cd92d372a120695a1d0602d06341b236d9fb1dd0
     // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target == updateStatusModal) {
@@ -412,9 +424,12 @@
         if (event.target == addTrackingModal) {
             addTrackingModal.style.display = 'none';
         }
+<<<<<<< HEAD
+=======
         if (event.target == processCancellationModal) {
             processCancellationModal.style.display = 'none';
         }
+>>>>>>> cd92d372a120695a1d0602d06341b236d9fb1dd0
     });
 </script>
 

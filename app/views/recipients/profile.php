@@ -11,7 +11,6 @@
 
     <?php flash('profile_success'); ?>
     <?php flash('profile_error'); ?>
-
     <div class="profile-grid">
         <!-- Profile Section -->
         <div class="profile-section">

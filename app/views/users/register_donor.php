@@ -8,33 +8,33 @@
         <form action="<?php echo URLROOT; ?>/users/register_donor" method="POST" class="auth-form">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="firstName">First Name</label>
+                    <label for="firstName">First Name<span style="color:red">*</span></label>
                     <input type="text" name="firstName" id="firstName" class="form-control" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="lastName">Last Name</label>
+                    <label for="lastName">Last Name<span style="color:red">*</span></label>
                     <input type="text" name="lastName" id="lastName" class="form-control" required>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">Email Address<span style="color:red">*</span></label>
                 <input type="email" name="email" id="email" class="form-control" required>
             </div>
 
             <div class="form-group">
-                <label for="contactNumber">Contact Number</label>
+                <label for="contactNumber">Contact Number<span style="color:red">*</span></label>
                 <input type="tel" name="contactNumber" id="contactNumber" class="form-control">
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">Password<span style="color:red">*</span></label>
                 <input type="password" name="password" id="password" class="form-control" required>
             </div>
 
             <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
+                <label for="confirmPassword">Confirm Password<span style="color:red">*</span></label>
                 <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" required>
             </div>
 

@@ -1,8 +1,9 @@
-/* Donor Profile Styles */
+/* Flat Donor Profile Styles */
 
 .donor-profile {
   margin-bottom: 30px;
   max-width: 1200px;
+  margin: 0 auto;
   padding: 2rem 1rem;
   background-color: var(--background-light);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -678,7 +679,7 @@
 }
 
 /* Helpers */
-.mt-3 {
+.mt-3,.mt-4 {
   margin-top: 1rem;
 }
 
