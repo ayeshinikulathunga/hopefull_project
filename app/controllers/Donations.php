@@ -412,7 +412,8 @@ public function donate($requestId = null) {
                             'status' => 'Pending',
                             'payment_details' => json_encode([
                                 'user_id' => $_SESSION['user_id'],
-                                'donor_id' => $_SESSION['donor_id']
+                                'donor_id' => $_SESSION['donor_id'],
+                                'request_id' => $data['requestId']
                             ])
                         ];
                         
@@ -855,8 +856,6 @@ public function pendingDonations($page = 1) {
 }
 
 
-// Add these methods to your Donations.php controller
-
 /**
  * Process PayHere payment for a monetary donation
  * @param string $donationId The donation ID
@@ -899,59 +898,147 @@ public function processPayHere($donationId) {
 
 /**
  * Handle PayHere payment success callback
+ * @param string $donationId The donation ID (optional)
  */
-public function paymentSuccess() {
+public function paymentSuccess($donationId = null) {
     // Log information for debugging
     error_log('Donation PayHere payment success callback triggered.');
     error_log('PayHere success $_SESSION: ' . json_encode($_SESSION));
     
-    // Check if there's a PayHere donation ID in session
-    if (!isset($_SESSION['payhere_donation_id'])) {
+    // Check if donation ID is provided via URL parameter
+    if (!$donationId && isset($_SESSION['payhere_donation_id'])) {
+        // Fall back to session variable if URL parameter is not provided
+        $donationId = $_SESSION['payhere_donation_id'];
+    }
+    
+    // Redirect to dashboard if no donation ID is available
+    if (!$donationId) {
+        flash('donation_error', 'Donation information is missing', 'alert alert-danger');
         redirect('donors/dashboard');
     }
     
-    $donationId = $_SESSION['payhere_donation_id'];
+    // Begin transaction
+    $this->db->beginTransaction();
     
-    // Get the payment record for this donation
-    $payment = $this->donationModel->getPaymentByDonationId($donationId);
-    
-    // If payment record exists, update its status
-    if ($payment) {
-        // Update payment status to Completed
-        $this->donationModel->updateDonationPaymentStatus(
-            $payment->ID,
-            'Completed',
-            null,
-            'Updated via return URL'
-        );
+    try {
+        // Get donation details first
+        $this->db->query('SELECT * FROM donations WHERE DonationID = :donationId');
+        $this->db->bind(':donationId', $donationId);
+        $donation = $this->db->single();
+        
+        if (!$donation) {
+            throw new Exception("Donation not found: " . $donationId);
+        }
+        
+        // Only process if donation is not already completed
+        if ($donation->Status != 'Completed') {
+            // 1. Update donation status
+            $this->db->query('UPDATE donations SET Status = "Completed" WHERE DonationID = :donationId');
+            $this->db->bind(':donationId', $donationId);
+            $donationUpdateResult = $this->db->execute();
+            
+            if (!$donationUpdateResult) {
+                throw new Exception("Failed to update donation status");
+            }
+            
+            // 2. Update monetary donation details (if it's a monetary donation)
+            if ($donation->DonationType == 'Monetary' && $donation->Amount > 0) {
+                $this->db->query('UPDATE monetary_donation_details 
+                                SET CurrentAmount = CurrentAmount + :amount 
+                                WHERE RequestID = :requestId');
+                $this->db->bind(':amount', $donation->Amount);
+                $this->db->bind(':requestId', $donation->RequestID);
+                $monetaryUpdateResult = $this->db->execute();
+                
+                if (!$monetaryUpdateResult) {
+                    throw new Exception("Failed to update monetary donation details");
+                }
+                
+                // 3. Update donor statistics
+                $this->db->query('UPDATE donors 
+                                SET TotalDonations = TotalDonations + :amount, 
+                                    DonationCount = DonationCount + 1 
+                                WHERE DonorID = :donorId');
+                $this->db->bind(':amount', $donation->Amount);
+                $this->db->bind(':donorId', $donation->DonorID);
+                $donorUpdateResult = $this->db->execute();
+                
+                if (!$donorUpdateResult) {
+                    throw new Exception("Failed to update donor statistics");
+                }
+                
+                // 4. Check if request is complete
+                $this->checkMonetaryRequestCompletion($donation->RequestID);
+            }
+        }
+        
+        // 5. Get the payment record for this donation
+        $payment = $this->donationModel->getPaymentByDonationId($donationId);
+        
+        // 6. If payment record exists, update its status
+        if ($payment && $payment->Status != 'Completed') {
+            // Update payment status to Completed
+            $this->donationModel->updateDonationPaymentStatus(
+                $payment->ID,
+                'Completed',
+                null,
+                'Updated via return URL'
+            );
+            error_log("Updated payment ID {$payment->ID} to Completed");
+        } else {
+            error_log("No payment record found for donation: {$donationId} or payment already completed.");
+        }
+        
+        // Commit the transaction
+        $this->db->commit();
+        
+        // Clear the PayHere session variables if they exist
+        if (isset($_SESSION['payhere_donation_id'])) {
+            unset($_SESSION['payhere_donation_id']);
+        }
+        if (isset($_SESSION['payhere_payment_id'])) {
+            unset($_SESSION['payhere_payment_id']);
+        }
+        
+        // Flash success message and redirect to donation confirmation
+        flash('donation_message', 'Payment successful! Your donation has been processed.', 'alert alert-success');
+        redirect('donations/donationConfirmation/' . $donationId);
+    } catch (Exception $e) {
+        // If any error occurs, roll back the transaction
+        $this->db->rollBack();
+        error_log("Payment Success Error: " . $e->getMessage());
+        flash('donation_error', 'There was an error processing your payment.', 'alert alert-danger');
+        redirect('donors/dashboard');
     }
-    
-    // Clear the PayHere session variables
-    unset($_SESSION['payhere_donation_id']);
-    unset($_SESSION['payhere_payment_id']);
-    
-    // Flash success message and redirect to donation confirmation
-    flash('donation_message', 'Payment successful! Your donation has been processed.', 'alert alert-success');
-    redirect('donations/donationConfirmation/' . $donationId);
 }
 
 /**
  * Handle PayHere payment cancellation
+ * @param string $donationId The donation ID (optional)
  */
-public function paymentCancelled() {
+public function paymentCancelled($donationId = null) {
     // Log information for debugging
     error_log('Donation PayHere payment cancelled.');
     
-    // Check if there's a PayHere donation ID in session
-    if (!isset($_SESSION['payhere_donation_id'])) {
+    // Check if donation ID is provided via URL parameter
+    if (!$donationId && isset($_SESSION['payhere_donation_id'])) {
+        // Fall back to session variable if URL parameter is not provided
+        $donationId = $_SESSION['payhere_donation_id'];
+    }
+    
+    // Redirect to dashboard if no donation ID is available
+    if (!$donationId) {
+        flash('donation_error', 'Donation information is missing', 'alert alert-danger');
         redirect('donors/dashboard');
     }
     
-    $donationId = $_SESSION['payhere_donation_id'];
-    
     // Clear the PayHere session variables
-    unset($_SESSION['payhere_donation_id']);
-    unset($_SESSION['payhere_payment_id']);
+    if (isset($_SESSION['payhere_donation_id'])) {
+        unset($_SESSION['payhere_donation_id']);
+    }
+    if (isset($_SESSION['payhere_payment_id'])) {
+        unset($_SESSION['payhere_payment_id']);
+    }
     
     // Flash message and redirect to donation details
     flash('donation_message', 'Payment was cancelled. You can try again later.', 'alert alert-warning');
@@ -970,52 +1057,129 @@ public function paymentNotify() {
     
     // Verify the payment
     if (isset($data['merchant_id']) && $data['merchant_id'] == DONATION_PAYHERE_MERCHANT_ID) {
-        // Extract donation ID from the merchant-specific data
+        // Extract donation ID from the order_id field
         $donationId = $data['order_id'] ?? null;
         
         if ($donationId) {
-            $donation = $this->donationModel->getDonationById($donationId);
+            // Begin transaction
+            $this->db->beginTransaction();
             
-            if ($donation) {
-                // Verify the payment status
-                if ($data['status_code'] == '2') { // 2 = Success
-                    // Get the payment record
-                    $payment = $this->donationModel->getPaymentByDonationId($donationId);
-                    
-                    if ($payment) {
-                        $this->donationModel->updateDonationPaymentStatus(
-                            $payment->ID,
-                            'Completed',
-                            $data['payment_id'] ?? null,
-                            json_encode($data)
-                        );
-                    }
-                    
-                    // Return success response
-                    http_response_code(200);
-                    echo 'Payment verified';
-                } else {
-                    // Payment failed
-                    // Update the payment record
-                    $payment = $this->donationModel->getPaymentByDonationId($donationId);
-                    
-                    if ($payment) {
-                        $this->donationModel->updateDonationPaymentStatus(
-                            $payment->ID,
-                            'Failed',
-                            $data['payment_id'] ?? null,
-                            json_encode($data)
-                        );
-                    }
-                    
-                    // Return error response
-                    http_response_code(400);
-                    echo 'Payment failed';
+            try {
+                // Get donation information
+                $this->db->query('SELECT * FROM donations WHERE DonationID = :donationId');
+                $this->db->bind(':donationId', $donationId);
+                $donation = $this->db->single();
+                
+                if (!$donation) {
+                    throw new Exception("Donation not found: " . $donationId);
                 }
-            } else {
-                // Donation not found
-                http_response_code(404);
-                echo 'Donation not found';
+                
+                // Verify the md5sig for security
+                $merchant_id = $data['merchant_id'];
+                $order_id = $data['order_id'];
+                $payhere_amount = $data['payhere_amount'];
+                $payhere_currency = $data['payhere_currency'];
+                $status_code = $data['status_code'];
+                $md5sig = $data['md5sig'];
+                
+                $local_md5sig = strtoupper(
+                    md5(
+                        $merchant_id .
+                        $order_id .
+                        $payhere_amount .
+                        $payhere_currency .
+                        $status_code .
+                        strtoupper(md5(DONATION_PAYHERE_MERCHANT_SECRET))
+                    )
+                );
+                
+                // Only process if signatures match
+                if ($local_md5sig === $md5sig) {
+                    // Verify the payment status
+                    if ($data['status_code'] == '2') { // 2 = Success
+                        // Get the payment record
+                        $payment = $this->donationModel->getPaymentByDonationId($donationId);
+                        
+                        if ($payment && $payment->Status != 'Completed') {
+                            $this->donationModel->updateDonationPaymentStatus(
+                                $payment->ID,
+                                'Completed',
+                                $data['payment_id'] ?? null,
+                                json_encode($data)
+                            );
+                        }
+                        
+                        // Update donation status to Completed if it's not already
+                        if ($donation->Status != 'Completed') {
+                            // 1. Update donation status
+                            $this->db->query('UPDATE donations SET Status = "Completed" WHERE DonationID = :donationId');
+                            $this->db->bind(':donationId', $donationId);
+                            $this->db->execute();
+                            
+                            // 2. If it's a monetary donation, update monetary donation details
+                            if ($donation->DonationType == 'Monetary' && $donation->Amount > 0) {
+                                // Update monetary donation details
+                                $this->db->query('UPDATE monetary_donation_details 
+                                                SET CurrentAmount = CurrentAmount + :amount 
+                                                WHERE RequestID = :requestId');
+                                $this->db->bind(':amount', $donation->Amount);
+                                $this->db->bind(':requestId', $donation->RequestID);
+                                $this->db->execute();
+                                
+                                // 3. Update donor statistics
+                                $this->db->query('UPDATE donors 
+                                                SET TotalDonations = TotalDonations + :amount, 
+                                                    DonationCount = DonationCount + 1 
+                                                WHERE DonorID = :donorId');
+                                $this->db->bind(':amount', $donation->Amount);
+                                $this->db->bind(':donorId', $donation->DonorID);
+                                $this->db->execute();
+                                
+                                // 4. Check if the request is complete
+                                $this->checkMonetaryRequestCompletion($donation->RequestID);
+                            }
+                        }
+                        
+                        // Commit the transaction
+                        $this->db->commit();
+                        
+                        // Return success response
+                        http_response_code(200);
+                        echo 'Payment verified';
+                    } else {
+                        // Payment failed
+                        // Update the payment record
+                        $payment = $this->donationModel->getPaymentByDonationId($donationId);
+                        
+                        if ($payment) {
+                            $this->donationModel->updateDonationPaymentStatus(
+                                $payment->ID,
+                                'Failed',
+                                $data['payment_id'] ?? null,
+                                json_encode($data)
+                            );
+                        }
+                        
+                        // Commit the transaction (even for failed payments we want to record the status)
+                        $this->db->commit();
+                        
+                        // Return error response
+                        http_response_code(400);
+                        echo 'Payment failed';
+                    }
+                } else {
+                    // MD5 signature verification failed
+                    $this->db->rollBack();
+                    http_response_code(403);
+                    error_log("MD5 signature mismatch. Local: {$local_md5sig}, Received: {$md5sig}");
+                    echo 'Invalid signature';
+                }
+            } catch (Exception $e) {
+                // If any error occurs, roll back the transaction
+                $this->db->rollBack();
+                error_log("Payment Notify Error: " . $e->getMessage());
+                http_response_code(500);
+                echo 'Server error: ' . $e->getMessage();
             }
         } else {
             // Invalid data
@@ -1030,43 +1194,6 @@ public function paymentNotify() {
     
     exit;
 }
-
-/**
- * Display donation confirmation after payment
- * @param string $donationId The donation ID
- */
-public function donationConfirmation($donationId = null) {
-    // Check if user is logged in
-    if (!isLoggedIn()) {
-        redirect('users/login');
-    }
-    
-    if ($donationId === null) {
-        redirect('donors/dashboard');
-    }
-    
-    // Get donation details
-    $donation = $this->donationModel->getDonationById($donationId);
-    
-    if (!$donation || $donation->DonorID != $_SESSION['donor_id']) {
-        flash('donation_error', 'Invalid donation', 'alert alert-danger');
-        redirect('donors/dashboard');
-    }
-    
-    // Get request details
-    $request = $this->requestModel->getRequestById($donation->RequestID);
-    
-    // Prepare data for view
-    $data = [
-        'title' => 'Donation Confirmation',
-        'donation' => $donation,
-        'request' => $request
-    ];
-    
-    // Load the appropriate view based on donation type
-    $this->view('donors/donation-confirmation', $data);
-}
-
 
 
 }

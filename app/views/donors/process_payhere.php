@@ -19,8 +19,8 @@
                     <form id="payhere-payment-form" method="post" action="<?php echo $data['sandbox'] ? 'https://sandbox.payhere.lk/pay/checkout' : 'https://www.payhere.lk/pay/checkout'; ?>">
                         <!-- Required PayHere Parameters -->
                         <input type="hidden" name="merchant_id" value="<?php echo $data['merchant_id']; ?>">
-                        <input type="hidden" name="return_url" value="<?php echo $data['return_url'] . '/' . $data['donation']->DonationID; ?>">
-                        <input type="hidden" name="cancel_url" value="<?php echo $data['cancel_url'] . '/' . $data['donation']->DonationID; ?>">
+                        <input type="hidden" name="return_url" value="<?php echo $data['return_url']; ?>">
+                        <input type="hidden" name="cancel_url" value="<?php echo $data['cancel_url']; ?>">
                         <input type="hidden" name="notify_url" value="<?php echo $data['notify_url']; ?>">
                         
                         <!-- Order Details -->
@@ -28,6 +28,27 @@
                         <input type="hidden" name="items" value="Donation: <?php echo $data['request']->Title; ?>">
                         <input type="hidden" name="currency" value="LKR">
                         <input type="hidden" name="amount" value="<?php echo $data['donation']->Amount; ?>">
+                        
+                        <?php
+                        // Generate hash value (REQUIRED by PayHere)
+                        $merchant_id = $data['merchant_id'];
+                        $order_id = $data['donation']->DonationID;
+                        $amount = number_format($data['donation']->Amount, 2, '.', '');
+                        $currency = "LKR";
+                        $merchant_secret = DONATION_PAYHERE_MERCHANT_SECRET;
+                        
+                        // Create hash according to PayHere requirements
+                        $hash = strtoupper(
+                            md5(
+                                $merchant_id . 
+                                $order_id . 
+                                $amount . 
+                                $currency . 
+                                strtoupper(md5($merchant_secret))
+                            )
+                        );
+                        ?>
+                        <input type="hidden" name="hash" value="<?php echo $hash; ?>">
                         
                         <!-- Customer Details -->
                         <input type="hidden" name="first_name" value="<?php echo $data['user']->FirstName ?? 'Anonymous'; ?>">

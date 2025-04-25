@@ -696,7 +696,7 @@ class Marketplace extends Controller {
         }
     }*/
 
-    public function checkout() {
+    /*public function checkout() {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
             flash('login_message', 'Please log in to checkout', 'alert alert-info');
@@ -941,13 +941,297 @@ class Marketplace extends Controller {
     
             $this->view('marketplace/checkout', $data);
         }
+    }*/
+
+    public function checkout() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('login_message', 'Please log in to checkout', 'alert alert-info');
+            redirect('users/login');
+        }
+    
+        // Check if cart is empty
+        if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+            flash('cart_message', 'Your cart is empty', 'alert alert-info');
+            redirect('marketplace/cart');
+        }
+    
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $data = [
+                'user_id' => $_SESSION['user_id'],
+                'total_amount' => 0,
+                'shipping_address' => trim($_POST['shipping_address']),
+                'shipping_address_err' => '',
+                'payment_method' => trim($_POST['payment_method']),
+                'payment_method_err' => '',
+                'contact_phone' => trim($_POST['contact_phone'] ?? ''),
+                'contact_phone_err' => '',
+                'shipping_notes' => trim($_POST['shipping_notes'] ?? '')
+            ];
+    
+            // Calculate total
+            $subtotal = 0;
+            foreach ($_SESSION['cart'] as $item) {
+                $subtotal += $item['price'] * $item['quantity'];
+            }
+            
+            // Add shipping cost (Rs. 350)
+            $data['total_amount'] = $subtotal + 350;
+    
+            // Validate inputs
+            if (empty($data['shipping_address'])) {
+                $data['shipping_address_err'] = 'Please enter shipping address';
+            }
+    
+            if (empty($data['payment_method'])) {
+                $data['payment_method_err'] = 'Please select a payment method';
+            }
+    
+            if (empty($data['contact_phone'])) {
+                $data['contact_phone_err'] = 'Please enter contact number for delivery';
+            } elseif (strlen($data['contact_phone']) < 10) {
+                $data['contact_phone_err'] = 'Contact number must be at least 10 characters';
+            }
+    
+            // If bank transfer payment method, validate payment slip
+            $bankPaymentUploaded = false;
+            $slipFileName = '';
+            if ($data['payment_method'] == 'bank') {
+                if (!isset($_FILES['bank_slip']) || $_FILES['bank_slip']['error'] != 0) {
+                    $data['payment_method_err'] = 'Please upload your bank transfer slip';
+                } else {
+                    // File validation logic
+                    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+                    $fileType = $_FILES['bank_slip']['type'];
+                    $fileSize = $_FILES['bank_slip']['size'];
+                    $maxSize = 5 * 1024 * 1024; // 5MB max size
+                    
+                    if (!in_array($fileType, $allowedTypes)) {
+                        $data['payment_method_err'] = 'Only JPEG, PNG, GIF images and PDF files are allowed';
+                    } elseif ($fileSize > $maxSize) {
+                        $data['payment_method_err'] = 'File size must be less than 5MB';
+                    } else {
+                        $bankPaymentUploaded = true;
+                    }
+                }
+            }
+    
+            // If no errors, create order
+            if (empty($data['shipping_address_err']) && empty($data['payment_method_err']) && empty($data['contact_phone_err'])) {
+                // Start transaction
+                $this->db->beginTransaction();
+                
+                try {
+                    // Create order
+                    $orderData = [
+                        'user_id' => $data['user_id'],
+                        'total_amount' => $data['total_amount'],
+                        'shipping_address' => $data['shipping_address'],
+                        'payment_method' => $data['payment_method']
+                    ];
+                    
+                    $orderId = $this->orderModel->createOrder($orderData);
+                    
+                    if (!$orderId) {
+                        throw new Exception("Failed to create order");
+                    }
+                    
+                    // Create shipping record
+                    $shippingData = [
+                        'order_id' => $orderId,
+                        'shipping_address' => $data['shipping_address'],
+                        'contact_phone' => $data['contact_phone'],
+                        'payment_method' => $data['payment_method'],
+                        'shipping_notes' => $data['shipping_notes']
+                    ];
+                    
+                    $shippingId = $this->orderModel->createShippingDetails($shippingData);
+                    
+                    if (!$shippingId) {
+                        throw new Exception("Failed to create shipping record");
+                    }
+                    
+                    // Add order items
+                    $orderItemsSuccess = true;
+                    foreach ($_SESSION['cart'] as $item) {
+                        $orderItem = [
+                            'order_id' => $orderId,
+                            'product_id' => $item['product_id'],
+                            'quantity' => $item['quantity'],
+                            'price' => $item['price']
+                        ];
+                        
+                        if (!$this->orderModel->addOrderItem($orderItem)) {
+                            $orderItemsSuccess = false;
+                            error_log("Failed to add item to order: " . json_encode($orderItem));
+                            break;
+                        }
+                    }
+                    
+                    if (!$orderItemsSuccess) {
+                        throw new Exception("Failed to add items to order");
+                    }
+                    
+                    // Handle bank payment slip upload if applicable
+                    if ($data['payment_method'] == 'bank' && $bankPaymentUploaded) {
+                        // Get file extension
+                        $fileExt = pathinfo($_FILES['bank_slip']['name'], PATHINFO_EXTENSION);
+                        
+                        // Create new filename based on order ID
+                        $newFileName = $orderId . '.' . $fileExt;
+                        
+                        // Set upload directory
+                        $slipsDir = ROOT_PATH . '/../public/uploads/slips';
+                        
+                        // Create directory if it doesn't exist
+                        if (!file_exists($slipsDir)) {
+                            mkdir($slipsDir, 0755, true);
+                        }
+                        
+                        // Set file destination
+                        $destination = $slipsDir . '/' . $newFileName;
+                        
+                        // Upload file
+                        if (move_uploaded_file($_FILES['bank_slip']['tmp_name'], $destination)) {
+                            // Create bank payment record
+                            $bankPaymentModel = $this->model('BankPayment');
+                            $bankPaymentData = [
+                                'order_id' => $orderId,
+                                'slip_file' => $newFileName
+                            ];
+                            
+                            if (!$bankPaymentModel->createBankPayment($bankPaymentData)) {
+                                error_log("Failed to create bank payment record");
+                                // Continue anyway as the file is uploaded
+                            }
+                            
+                            $slipFileName = $newFileName;
+                        } else {
+                            error_log("Failed to move uploaded file");
+                            // Continue anyway as the order is created
+                        }
+                    }
+                    
+                    // Everything successful - commit transaction
+                    $this->db->commit();
+                    
+                    // If payment method is PayHere, create a payment record and redirect to PayHere
+                    if ($data['payment_method'] == 'payhere') {
+                        // Create payment record
+                        $paymentData = [
+                            'order_id' => $orderId,
+                            'payment_amount' => $data['total_amount'],
+                            'payment_method' => 'payhere',
+                            'status' => 'Pending',
+                            'payment_details' => json_encode([
+                                'user_id' => $data['user_id']
+                            ])
+                        ];
+                        
+                        $paymentId = $this->paymentModel->createPaymentRecord($paymentData);
+                        
+                        if (!$paymentId) {
+                            throw new Exception("Failed to create payment record");
+                        }
+                        
+                        // Store the order ID in session for later use
+                        $_SESSION['payhere_order_id'] = $orderId;
+                        $_SESSION['payhere_payment_id'] = $paymentId;
+                        
+                        // IMPORTANT: Save cart in session before clearing it
+                        $_SESSION['pending_cart'] = $_SESSION['cart'];
+                        
+                        // Redirect to PayHere
+                        redirect('marketplace/processPayHere/' . $orderId);
+                    } else {
+                        // For other payment methods, proceed as usual
+                        
+                        // Clear cart
+                        unset($_SESSION['cart']);
+                        
+                        flash('order_message', 'Order placed successfully', 'alert alert-success');
+                        redirect('marketplace/orderConfirmation/' . $orderId);
+                    }
+                    
+                } catch (Exception $e) {
+                    // Something went wrong - rollback
+                    $this->db->rollBack();
+                    error_log("Checkout error: " . $e->getMessage());
+                    flash('order_error', 'Something went wrong, please try again', 'alert alert-danger');
+                    $this->view('marketplace/checkout', $data);
+                }
+            } else {
+                // Load view with errors
+                $this->view('marketplace/checkout', $data);
+            }
+        } else {
+            $data = [
+                'title' => 'Checkout',
+                'cart_items' => $_SESSION['cart'],
+                'total' => 0,
+                'shipping_address' => '',
+                'shipping_address_err' => '',
+                'payment_method' => '',
+                'payment_method_err' => '',
+                'contact_phone' => '',
+                'contact_phone_err' => '',
+                'shipping_notes' => ''
+            ];
+    
+            // Calculate total
+            foreach ($data['cart_items'] as $item) {
+                $data['total'] += $item['price'] * $item['quantity'];
+            }
+    
+            $this->view('marketplace/checkout', $data);
+        }
+    }
+    
+    // Process PayHere Payment
+    public function processPayHere($orderId) {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            redirect('users/login');
+        }
+        
+        // Check if it's a valid order
+        $order = $this->orderModel->getOrderById($orderId);
+        
+        if (!$order || $order->UserID != $_SESSION['user_id']) {
+            flash('order_error', 'Invalid order', 'alert alert-danger');
+            redirect('marketplace/orders');
+        }
+        
+        // Get user information
+        $user = $this->userModel->getUserById($_SESSION['user_id']);
+        
+        // Get shipping details
+        $shipping = $this->orderModel->getShippingDetails($orderId);
+        
+        // Prepare data for PayHere
+        $data = [
+            'title' => 'Processing Payment',
+            'order' => $order,
+            'user' => $user,
+            'shipping' => $shipping,
+            'merchant_id' => PAYHERE_MERCHANT_ID,
+            'return_url' => PAYHERE_RETURN_URL,
+            'cancel_url' => PAYHERE_CANCEL_URL,
+            'notify_url' => PAYHERE_NOTIFY_URL,
+            'sandbox' => PAYHERE_SANDBOX
+        ];
+        
+        $this->view('marketplace/process_payhere', $data);
     }
 
    
     
    
     // Process PayHere Payment
-    public function processPayHere($orderId) {
+    /*public function processPayHere($orderId) {
 
         
         // Check if user is logged in
@@ -983,7 +1267,7 @@ class Marketplace extends Controller {
         ];
         
         $this->view('marketplace/process_payhere', $data);
-    }
+    }*/
     
     // PayHere Payment Success
     /*public function paymentSuccess() {
@@ -1006,10 +1290,10 @@ class Marketplace extends Controller {
         
         flash('order_message', 'Payment successful! Your order is being processed.', 'alert alert-success');
         redirect('marketplace/orderConfirmation/' . $orderId);
-    }
+    }*/
     
     // PayHere Payment Cancelled
-    public function paymentCancelled() {
+    /*public function paymentCancelled() {
         // Handle return from PayHere after cancelled payment
         
         // Check if there's a PayHere order in session
@@ -1027,7 +1311,38 @@ class Marketplace extends Controller {
         redirect('marketplace/orderDetails/' . $orderId);
     }*/
 
-    public function paymentSuccess($orderId = null) {
+    // PayHere Payment Cancelled
+public function paymentCancelled() {
+    // Handle return from PayHere after cancelled payment
+    error_log('PayHere payment cancelled. Session: ' . json_encode($_SESSION));
+    
+    // Check if there's a PayHere order in session
+    if (!isset($_SESSION['payhere_order_id'])) {
+        redirect('marketplace/orders');
+    }
+    
+    $orderId = $_SESSION['payhere_order_id'];
+    
+    // Update order status to indicate payment was cancelled
+    $this->orderModel->updateOrderStatus($orderId, 'Payment Cancelled');
+    
+    // If we have a pending cart, restore it
+    if (isset($_SESSION['pending_cart'])) {
+        $_SESSION['cart'] = $_SESSION['pending_cart'];
+        unset($_SESSION['pending_cart']);
+    }
+    
+    // Clear the PayHere session variables
+    unset($_SESSION['payhere_order_id']);
+    unset($_SESSION['payhere_payment_id']);
+    
+    flash('order_message', 'Payment was cancelled. Your items are still in your cart.', 'alert alert-warning');
+    redirect('marketplace/cart');
+}
+
+
+
+    /*public function paymentSuccess($orderId = null) {
         // Log information for debugging
         error_log('PayHere payment success callback triggered. OrderID: ' . $orderId);
         error_log('PayHere success $_SESSION: ' . json_encode($_SESSION));
@@ -1076,10 +1391,70 @@ class Marketplace extends Controller {
         // Flash success message and redirect to order confirmation
         flash('order_message', 'Payment successful! Your order is being processed.', 'alert alert-success');
         redirect('marketplace/orderConfirmation/' . $orderId);
+    }*/
+
+    public function paymentSuccess($orderId = null) {
+        // Log information for debugging
+        error_log('PayHere payment success callback triggered. OrderID: ' . $orderId);
+        error_log('PayHere success $_SESSION: ' . json_encode($_SESSION));
+        
+        // Check if order ID is provided via URL parameter
+        if (!$orderId && isset($_SESSION['payhere_order_id'])) {
+            // Fall back to session variable if URL parameter is not provided
+            $orderId = $_SESSION['payhere_order_id'];
+        }
+        
+        // Redirect to orders page if no order ID is available
+        if (!$orderId) {
+            flash('order_error', 'Order information is missing', 'alert alert-danger');
+            redirect('marketplace/orders');
+        }
+        
+        // Get the payment record for this order
+        $payment = $this->paymentModel->getPaymentByOrderId($orderId);
+        
+        // If payment record exists, update its status
+        if ($payment) {
+            // Update payment status to Completed
+            $this->paymentModel->updatePaymentStatus(
+                $payment->ID,
+                'Completed',
+                null,
+                'Updated via return URL'
+            );
+            error_log("Updated payment ID {$payment->ID} to Completed");
+        } else {
+            error_log("No payment record found for order: {$orderId}");
+        }
+        
+        // Update order status to Processing since payment is successful
+        $this->orderModel->updateOrderStatus($orderId, 'Processing');
+        error_log("Updated order {$orderId} to Processing");
+        
+        // NOW we can safely clear the cart
+        if (isset($_SESSION['pending_cart'])) {
+            unset($_SESSION['pending_cart']);
+        }
+        if (isset($_SESSION['cart'])) {
+            unset($_SESSION['cart']);
+        }
+        
+        // Clear the PayHere session variables if they exist
+        if (isset($_SESSION['payhere_order_id'])) {
+            unset($_SESSION['payhere_order_id']);
+        }
+        if (isset($_SESSION['payhere_payment_id'])) {
+            unset($_SESSION['payhere_payment_id']);
+        }
+        
+        // Flash success message and redirect to order confirmation
+        flash('order_message', 'Payment successful! Your order is being processed.', 'alert alert-success');
+        redirect('marketplace/orderConfirmation/' . $orderId);
     }
     
+    
     // PayHere Payment Notification
-    public function paymentNotify() {
+    /*public function paymentNotify() {
         // This endpoint will receive server-to-server notifications from PayHere
         error_log('PayHere payment notification callback triggered. Data: ' . json_encode($_POST));
         // This should be accessible without a session, as PayHere servers will call it
@@ -1154,7 +1529,146 @@ class Marketplace extends Controller {
         }
         
         exit;
+    }*/
+
+
+
+// PayHere Payment Notification
+public function paymentNotify() {
+    // This endpoint will receive server-to-server notifications from PayHere
+    error_log('PayHere payment notification callback triggered. Data: ' . json_encode($_POST));
+    // This should be accessible without a session, as PayHere servers will call it
+    
+    // Get the POST data
+    $data = $_POST;
+    
+    // Log the notification
+    error_log('PayHere Notification: ' . json_encode($data));
+    
+    // Verify the payment
+    if (isset($data['merchant_id']) && $data['merchant_id'] == PAYHERE_MERCHANT_ID) {
+        // Extract order ID from the merchant-specific data
+        $orderId = $data['order_id'] ?? null;
+        
+        if ($orderId) {
+            $order = $this->orderModel->getOrderById($orderId);
+            
+            if ($order) {
+                // Verify the payment status
+                if ($data['status_code'] == '2') { // 2 = Success
+                    // Update the order status
+                    $this->orderModel->updateOrderStatus($orderId, 'Processing');
+                    
+                    // Update the payment record
+                    $payment = $this->paymentModel->getPaymentByOrderId($orderId);
+                    
+                    if ($payment) {
+                        $this->paymentModel->updatePaymentStatus(
+                            $payment->ID,
+                            'Completed',
+                            $data['payment_id'] ?? null,
+                            json_encode($data)
+                        );
+                    }
+                    
+                    // Return success response
+                    http_response_code(200);
+                    echo 'Payment verified';
+                } else {
+                    // Payment failed
+                    // Update the payment record
+                    $payment = $this->paymentModel->getPaymentByOrderId($orderId);
+                    
+                    if ($payment) {
+                        $this->paymentModel->updatePaymentStatus(
+                            $payment->ID,
+                            'Failed',
+                            $data['payment_id'] ?? null,
+                            json_encode($data)
+                        );
+                    }
+                    
+                    // Return error response
+                    http_response_code(400);
+                    echo 'Payment failed';
+                }
+            } else {
+                // Order not found
+                http_response_code(404);
+                echo 'Order not found';
+            }
+        } else {
+            // Invalid data
+            http_response_code(400);
+            echo 'Invalid data';
+        }
+    } else {
+        // Invalid merchant
+        http_response_code(403);
+        echo 'Invalid merchant';
     }
+    
+    exit;
+}
+
+// Add a method to retry payment for pending orders
+public function retryPayment($orderId = null) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        redirect('users/login');
+    }
+
+    if ($orderId === null) {
+        redirect('marketplace/orders');
+    }
+
+    // Get order info
+    $order = $this->orderModel->getOrderById($orderId);
+
+    // Verify order belongs to user and is in a state where payment can be retried
+    if (!$order || $order->UserID != $_SESSION['user_id'] || 
+        !in_array($order->Status, ['Pending', 'Payment Cancelled']) || 
+        $order->PaymentMethod != 'payhere') {
+        flash('order_error', 'Invalid order or payment cannot be retried', 'alert alert-danger');
+        redirect('marketplace/orders');
+    }
+
+    // Create new payment record or update existing one
+    $payment = $this->paymentModel->getPaymentByOrderId($orderId);
+    
+    if ($payment) {
+        // Update existing payment record
+        $this->paymentModel->updatePaymentStatus(
+            $payment->ID,
+            'Pending',
+            null,
+            'Payment retry initiated'
+        );
+        $paymentId = $payment->ID;
+    } else {
+        // Create new payment record
+        $paymentData = [
+            'order_id' => $orderId,
+            'payment_amount' => $order->TotalAmount,
+            'payment_method' => 'payhere',
+            'status' => 'Pending',
+            'payment_details' => json_encode([
+                'user_id' => $_SESSION['user_id']
+            ])
+        ];
+        
+        $paymentId = $this->paymentModel->createPaymentRecord($paymentData);
+    }
+
+    // Store session variables
+    $_SESSION['payhere_order_id'] = $orderId;
+    $_SESSION['payhere_payment_id'] = $paymentId;
+    
+    // Redirect to PayHere
+    redirect('marketplace/processPayHere/' . $orderId);
+}
+
+
 
    
 

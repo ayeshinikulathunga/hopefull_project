@@ -84,7 +84,7 @@ class Donation {
         }
     }
 
-    public function checkMonetaryRequestCompletion($requestId) {
+    /*public function checkMonetaryRequestCompletion($requestId) {
         // Get monetary donation details
         $this->db->query('SELECT md.TargetAmount, md.CurrentAmount 
                          FROM monetary_donation_details md 
@@ -110,9 +110,44 @@ class Donation {
             $this->db->bind(':requestId', $requestId);
             $this->db->execute();
         }
+    }*/
+    public function checkMonetaryRequestCompletion($requestId) {
+        // Get monetary donation details
+        $this->db->query('SELECT md.DetailID, md.TargetAmount, md.CurrentAmount 
+                         FROM monetary_donation_details md 
+                         WHERE md.RequestID = :requestId');
+        
+        $this->db->bind(':requestId', $requestId);
+        $details = $this->db->single();
+        
+        // Log the details for debugging
+        error_log("Checking monetary request completion for Request ID: " . $requestId);
+        error_log("Monetary details: " . json_encode($details));
+        
+        // If target amount reached, update request status to Completed
+        if($details && $details->CurrentAmount >= $details->TargetAmount) {
+            error_log("Target amount reached. Marking request as Completed.");
+            $this->db->query('UPDATE donation_requests 
+                             SET RequestStatus = "Completed" 
+                             WHERE RequestID = :requestId');
+            
+            $this->db->bind(':requestId', $requestId);
+            $result = $this->db->execute();
+            error_log("Update result: " . ($result ? "Success" : "Failed"));
+        } else {
+            // Otherwise ensure it's marked as InProgress
+            error_log("Target amount not yet reached. Marking request as InProgress if it was Pending.");
+            $this->db->query('UPDATE donation_requests 
+                             SET RequestStatus = "InProgress" 
+                             WHERE RequestID = :requestId AND RequestStatus = "Pending"');
+            
+            $this->db->bind(':requestId', $requestId);
+            $result = $this->db->execute();
+            error_log("Update result: " . ($result ? "Success" : "Failed"));
+        }
     }
 
-    private function checkNonMonetaryRequestCompletion($requestId) {
+    public function checkNonMonetaryRequestCompletion($requestId) {
         // Get non-monetary donation details
         $this->db->query('SELECT nmd.QuantityNeeded, nmd.QuantityReceived 
                          FROM nonmonetary_donation_details nmd 
@@ -1008,6 +1043,123 @@ public function verifyPayHereSignature($data, $signature) {
     
     // Compare with the received signature
     return $calculated_signature === $signature;
+}
+
+/**
+ * Utility method to verify a donation was properly processed
+ * This can be called after payment success to ensure all updates were applied
+ * 
+ * @param string $donationId The donation ID to verify
+ * @return bool True if all updates were applied correctly
+ */
+public function verifyDonationProcessing($donationId) {
+    try {
+        // Begin transaction
+        $this->db->beginTransaction();
+        
+        // 1. Get the donation record
+        $this->db->query('SELECT * FROM donations WHERE DonationID = :donationId');
+        $this->db->bind(':donationId', $donationId);
+        $donation = $this->db->single();
+        
+        if (!$donation) {
+            error_log("Verification failed: Donation not found: " . $donationId);
+            return false;
+        }
+        
+        // Check if donation is marked as Completed
+        if ($donation->Status != 'Completed') {
+            error_log("Verification failed: Donation status is not Completed: " . $donation->Status);
+            
+            // Fix it by updating to Completed
+            $this->db->query('UPDATE donations SET Status = "Completed" WHERE DonationID = :donationId');
+            $this->db->bind(':donationId', $donationId);
+            $this->db->execute();
+            error_log("Fixed donation status to Completed");
+        }
+        
+        // For monetary donations, check if the amount was added to the monetary_donation_details
+        if ($donation->DonationType == 'Monetary' && $donation->Amount > 0) {
+            // 2. Get the monetary donation details
+            $this->db->query('SELECT * FROM monetary_donation_details WHERE RequestID = :requestId');
+            $this->db->bind(':requestId', $donation->RequestID);
+            $monetaryDetails = $this->db->single();
+            
+            if (!$monetaryDetails) {
+                error_log("Verification failed: Monetary details not found for request: " . $donation->RequestID);
+                return false;
+            }
+            
+            // 3. Check if the request status is updated correctly
+            $this->db->query('SELECT * FROM donation_requests WHERE RequestID = :requestId');
+            $this->db->bind(':requestId', $donation->RequestID);
+            $request = $this->db->single();
+            
+            if (!$request) {
+                error_log("Verification failed: Request not found: " . $donation->RequestID);
+                return false;
+            }
+            
+            // 4. Get all completed donations for this request
+            $this->db->query('SELECT SUM(Amount) as TotalDonated FROM donations 
+                             WHERE RequestID = :requestId AND Status = "Completed" AND DonationType = "Monetary"');
+            $this->db->bind(':requestId', $donation->RequestID);
+            $totalDonations = $this->db->single();
+            
+            // 5. Compare the sum of donations with the CurrentAmount in monetary_donation_details
+            if ($totalDonations && $totalDonations->TotalDonated != $monetaryDetails->CurrentAmount) {
+                error_log("Verification failed: Total donations (" . $totalDonations->TotalDonated . 
+                         ") does not match CurrentAmount (" . $monetaryDetails->CurrentAmount . ")");
+                
+                // Fix it by updating the CurrentAmount
+                $this->db->query('UPDATE monetary_donation_details 
+                                 SET CurrentAmount = :amount 
+                                 WHERE RequestID = :requestId');
+                $this->db->bind(':amount', $totalDonations->TotalDonated);
+                $this->db->bind(':requestId', $donation->RequestID);
+                $this->db->execute();
+                error_log("Fixed CurrentAmount to " . $totalDonations->TotalDonated);
+            }
+            
+            // 6. Check if request status should be Completed based on target amount
+            if ($monetaryDetails->CurrentAmount >= $monetaryDetails->TargetAmount && 
+                $request->RequestStatus != 'Completed') {
+                
+                error_log("Verification failed: Request should be Completed but is " . $request->RequestStatus);
+                
+                // Fix it by updating the request status
+                $this->db->query('UPDATE donation_requests 
+                                 SET RequestStatus = "Completed" 
+                                 WHERE RequestID = :requestId');
+                $this->db->bind(':requestId', $donation->RequestID);
+                $this->db->execute();
+                error_log("Fixed request status to Completed");
+            } else if ($monetaryDetails->CurrentAmount > 0 && 
+                      $monetaryDetails->CurrentAmount < $monetaryDetails->TargetAmount && 
+                      $request->RequestStatus == 'Pending') {
+                
+                error_log("Verification failed: Request should be InProgress but is Pending");
+                
+                // Fix it by updating the request status
+                $this->db->query('UPDATE donation_requests 
+                                 SET RequestStatus = "InProgress" 
+                                 WHERE RequestID = :requestId');
+                $this->db->bind(':requestId', $donation->RequestID);
+                $this->db->execute();
+                error_log("Fixed request status to InProgress");
+            }
+        }
+        
+        // If we got here without any errors, commit the transaction
+        $this->db->commit();
+        return true;
+        
+    } catch (Exception $e) {
+        // If any error occurs, roll back the transaction
+        $this->db->rollBack();
+        error_log("Verification Error: " . $e->getMessage());
+        return false;
+    }
 }
 
 

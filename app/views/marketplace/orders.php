@@ -62,6 +62,16 @@
                             <a href="<?php echo URLROOT; ?>/marketplace/orderDetails/<?php echo $order->OrderID; ?>" class="mp-orders__details-btn">
                                 View Details
                             </a>
+
+                            <?php if($order->Status == 'Pending' || $order->Status == 'Payment Cancelled'): ?>
+                                <?php if($order->PaymentMethod == 'payhere'): ?>
+                                    <a href="<?php echo URLROOT; ?>/marketplace/retryPayment/<?php echo $order->OrderID; ?>" class="mp-orders__pay-btn">
+                                        <i class="fas fa-credit-card"></i> Pay Now
+                                    </a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+
                             
                             <?php if($order->Status == 'Delivered'): ?>
                                 <button class="mp-orders__review-btn" onclick="leaveReview('<?php echo $order->OrderID; ?>')">
@@ -118,5 +128,31 @@
         alert('Review functionality would be implemented here for order: ' + orderId);
     }
 </script>
+
+<style>
+    .mp-orders__pay-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: #fff;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.mp-orders__pay-btn:hover {
+    background-color: #218838;
+    color: #fff;
+    text-decoration: none;
+}
+
+.mp-orders__pay-btn i {
+    margin-right: 5px;
+}
+</style>
 
 <?php require APPROOT . '/views/includes/footer.php'; ?>
