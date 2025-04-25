@@ -180,4 +180,45 @@ public function getDonorFeedbackStats($donorId) {
     
     return $this->db->single();
 }
+
+// Get feedback metrics for a recipient
+public function getFeedbackMetricsForRecipient($recipientId) {
+    // Initialize metrics object
+    $metrics = (object)[
+        'totalFeedback' => 0,
+        'averageRating' => 0,
+        'positiveCount' => 0,
+        'neutralCount' => 0,
+        'negativeCount' => 0,
+        'impactReports' => 0
+    ];
+    
+    // Get general feedback metrics
+    $this->db->query('SELECT 
+                        COUNT(*) as totalFeedback,
+                        AVG(Rating) as averageRating,
+                        SUM(CASE WHEN Rating >= 4 THEN 1 ELSE 0 END) as positiveCount,
+                        SUM(CASE WHEN Rating = 3 THEN 1 ELSE 0 END) as neutralCount,
+                        SUM(CASE WHEN Rating <= 2 THEN 1 ELSE 0 END) as negativeCount,
+                        SUM(CASE WHEN FeedbackType = "ImpactReport" THEN 1 ELSE 0 END) as impactReports
+                     FROM feedback_reports
+                     WHERE RecipientID = :recipientId');
+    
+    $this->db->bind(':recipientId', $recipientId);
+    $feedbackStats = $this->db->single();
+    
+    if ($feedbackStats) {
+        $metrics->totalFeedback = $feedbackStats->totalFeedback;
+        $metrics->averageRating = $feedbackStats->averageRating ? round($feedbackStats->averageRating, 1) : 0;
+        $metrics->positiveCount = $feedbackStats->positiveCount;
+        $metrics->neutralCount = $feedbackStats->neutralCount;
+        $metrics->negativeCount = $feedbackStats->negativeCount;
+        $metrics->impactReports = $feedbackStats->impactReports;
+    }
+    
+    return $metrics;
+}
+
+
+
 }

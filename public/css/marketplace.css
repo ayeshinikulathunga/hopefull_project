@@ -3256,3 +3256,261 @@
 .cancel-icon i {
   font-size: 16px;
 }
+
+/* Bank Payment Section Styles */
+.mp-order-details__bank-payment {
+  margin-top: 20px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.mp-order-details__bank-payment h3 {
+  color: #333;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+.mp-order-details__bank-payment-info {
+  margin-bottom: 15px;
+}
+
+.mp-order-details__bank-payment-info p {
+  margin-bottom: 8px;
+}
+
+.mp-order-details__bank-payment .badge {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.mp-order-details__bank-payment .badge-warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.mp-order-details__bank-payment .badge-success {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.mp-order-details__bank-payment .badge-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.mp-order-details__slip-image {
+  margin-top: 20px;
+}
+
+.mp-order-details__slip-image h4 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.mp-order-details__payment-slip {
+  max-width: 100%;
+  max-height: 400px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.mp-order-details__payment-slip:hover {
+  transform: scale(1.02);
+}
+
+
+@media print {
+  .mp-order-details__bank-payment {
+      page-break-inside: avoid;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+  }
+  
+  .mp-order-details__payment-slip {
+      max-height: 300px;
+      border: 1px solid #ddd;
+  }
+}
+
+/* Bank Payment Verification Status Styles */
+.mp-order-details__bank-payment {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.mp-order-details__bank-payment h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #343a40;
+  font-weight: 600;
+}
+
+.mp-order-details__payment-status {
+  margin-bottom: 20px;
+}
+
+.mp-order-details__status-indicator {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.mp-order-details__status-indicator.pending {
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.mp-order-details__status-indicator.verified {
+  background-color: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.mp-order-details__status-indicator.rejected {
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.mp-order-details__status-icon {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-order-details__status-indicator.pending .mp-order-details__status-icon {
+  color: #ffc107;
+}
+
+.mp-order-details__status-indicator.verified .mp-order-details__status-icon {
+  color: #28a745;
+}
+
+.mp-order-details__status-indicator.rejected .mp-order-details__status-icon {
+  color: #dc3545;
+}
+
+.mp-order-details__status-text {
+  flex: 1;
+}
+
+.mp-order-details__status-text h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.mp-order-details__status-value {
+  font-weight: 700;
+}
+
+.mp-order-details__status-value.pending {
+  color: #ffc107;
+}
+
+.mp-order-details__status-value.verified {
+  color: #28a745;
+}
+
+.mp-order-details__status-value.rejected {
+  color: #dc3545;
+}
+
+.mp-order-details__status-text p {
+  margin: 0;
+  color: #6c757d;
+}
+
+.mp-order-details__bank-payment-info {
+  margin-top: 20px;
+}
+
+.mp-order-details__bank-payment-info p {
+  margin-bottom: 10px;
+}
+
+.mp-order-details__payment-notes {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.mp-order-details__payment-notes h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #343a40;
+  font-size: 0.95rem;
+}
+
+.mp-order-details__payment-notes p {
+  margin: 0;
+  color: #6c757d;
+}
+
+.mp-order-details__slip-image {
+  margin-top: 20px;
+}
+
+.mp-order-details__slip-image h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #343a40;
+  font-size: 0.95rem;
+}
+
+.mp-order-details__payment-slip {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: transform 0.3s ease;
+}
+
+.mp-order-details__image-zoom {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.mp-order-details__slip-image a {
+  display: inline-block;
+  position: relative;
+}
+
+.mp-order-details__slip-image a:hover .mp-order-details__payment-slip {
+  transform: scale(1.02);
+}
+
+.mp-order-details__no-payment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  color: #6c757d;
+  text-align: center;
+}
+
+.mp-order-details__no-payment i {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  color: #adb5bd;
+}

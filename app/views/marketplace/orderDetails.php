@@ -83,9 +83,11 @@
                                     echo 'Cash on Delivery';
                                     break;
                                 case 'bank_transfer':
+                                case 'bank':
                                     echo 'Bank Transfer';
                                     break;
                                 case 'online_payment':
+                                case 'payhere':
                                     echo 'Online Payment';
                                     break;
                                 default:
@@ -97,7 +99,81 @@
                         ?>
                     </p>
                 </div>
-                
+
+                <!-- Bank Payment Section -->
+                <?php if(isset($data['order']->PaymentMethod) && ($data['order']->PaymentMethod == 'bank' || $data['order']->PaymentMethod == 'bank_transfer')): ?>
+                    <div class="mp-order-details__section mp-order-details__bank-payment">
+                        <h3>Bank Payment Details</h3>
+                        <?php if(isset($data['bank_payment']) && $data['bank_payment']): ?>
+                            <div class="mp-order-details__payment-status">
+                                <div class="mp-order-details__status-indicator <?php echo strtolower($data['bank_payment']->Status); ?>">
+                                    <span class="mp-order-details__status-icon">
+                                        <?php if($data['bank_payment']->Status === 'Pending'): ?>
+                                            <i class="fas fa-clock"></i>
+                                        <?php elseif($data['bank_payment']->Status === 'Verified'): ?>
+                                            <i class="fas fa-check-circle"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-times-circle"></i>
+                                        <?php endif; ?>
+                                    </span>
+                                    <div class="mp-order-details__status-text">
+                                        <h4>Payment Status: 
+                                            <span class="mp-order-details__status-value <?php echo strtolower($data['bank_payment']->Status); ?>">
+                                                <?php echo $data['bank_payment']->Status; ?>
+                                            </span>
+                                        </h4>
+                                        <?php if($data['bank_payment']->Status === 'Pending'): ?>
+                                            <p>Your payment is being verified by our team. This usually takes 1-2 business days.</p>
+                                        <?php elseif($data['bank_payment']->Status === 'Verified'): ?>
+                                            <p>Your payment has been verified and your order is being processed.</p>
+                                        <?php else: ?>
+                                            <p>Your payment has been rejected. Please contact customer support for more information.</p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mp-order-details__bank-payment-info">
+                                <p><strong>Upload Date:</strong> <?php echo date('F j, Y, g:i a', strtotime($data['bank_payment']->UploadDate)); ?></p>
+                                <?php if($data['bank_payment']->Status !== 'Pending'): ?>
+                                    <p><strong>Verification Date:</strong> <?php echo date('F j, Y, g:i a', strtotime($data['bank_payment']->VerificationDate)); ?></p>
+                                <?php endif; ?>
+                                
+                                <?php if(!empty($data['bank_payment']->Notes)): ?>
+                                    <div class="mp-order-details__payment-notes">
+                                        <h4>Notes:</h4>
+                                        <p><?php echo $data['bank_payment']->Notes; ?></p>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <div class="mp-order-details__slip-image">
+                                    <h4>Payment Slip</h4>
+                                    <?php 
+                                    $fileExt = pathinfo($data['bank_payment']->SlipFile, PATHINFO_EXTENSION);
+                                    if(in_array(strtolower($fileExt), ['jpg', 'jpeg', 'png', 'gif'])): ?>
+                                        <a href="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" target="_blank">
+                                            <img src="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" 
+                                                alt="Payment Slip" class="mp-order-details__payment-slip">
+                                            <div class="mp-order-details__image-zoom">
+                                                <i class="fas fa-search-plus"></i> Click to enlarge
+                                            </div>
+                                        </a>
+                                    <?php elseif(strtolower($fileExt) === 'pdf'): ?>
+                                        <p>Payment slip uploaded as PDF. <a href="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" target="_blank">Click here to view.</a></p>
+                                    <?php else: ?>
+                                        <p>Payment slip uploaded. <a href="<?php echo URLROOT; ?>/uploads/slips/<?php echo $data['bank_payment']->SlipFile; ?>" target="_blank">Click here to view.</a></p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <div class="mp-order-details__no-payment">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <p>No payment slip has been uploaded yet.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="mp-order-details__section">
                     <h3>Order Updates</h3>
                     <div class="mp-order-details__tracking">
@@ -195,7 +271,6 @@
                                         <a href="<?php echo URLROOT; ?>/marketplace/product/<?php echo $item->ProductID; ?>" class="mp-order-details__view-product">
                                             View Product
                                         </a>
-                                    </div>
                                     </div>
                                 </td>
                                 <td>Rs. <?php echo number_format($item->Price, 2); ?></td>
@@ -328,9 +403,11 @@
                                     echo 'Cash on Delivery';
                                     break;
                                 case 'bank_transfer':
+                                case 'bank':
                                     echo 'Bank Transfer';
                                     break;
                                 case 'online_payment':
+                                case 'payhere':
                                     echo 'Online Payment';
                                     break;
                                 default:
@@ -400,6 +477,67 @@
         </div>
     </div>
 </section>
+
+<style>
+/* Bank Payment Verification Status Styles */
+.mp-order-details__bank-payment {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.mp-order-details__bank-payment h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #343a40;
+    font-weight: 600;
+}
+
+.mp-order-details__payment-status {
+    margin-bottom: 20px;
+}
+
+.mp-order-details__status-indicator {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.mp-order-details__status-indicator.pending {
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.mp-order-details__status-indicator.verified {
+    background-color: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.mp-order-details__status-indicator.rejected {
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.mp-order-details__status-icon {
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    color: #6c757d;
+    text-align: center;
+}
+
+.mp-order-details__no-payment i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #adb5bd;
+}
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

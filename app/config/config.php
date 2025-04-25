@@ -28,10 +28,6 @@ define('PAYHERE_CANCEL_URL', URLROOT . '/marketplace/paymentCancelled');
 define('PAYHERE_NOTIFY_URL', URLROOT . '/marketplace/paymentNotify');
 
 
-define('BANK_SLIPS_PATH', ROOT_PATH . '/public/uploads/slips');
-define('BANK_SLIPS_URL', URLROOT . '/uploads/slips');
 
-// Create the directory if it doesn't exist
-if (!file_exists(BANK_SLIPS_PATH)) {
-    mkdir(BANK_SLIPS_PATH, 0755, true);
-}
+
+

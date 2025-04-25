@@ -8,89 +8,7 @@ class Recipient {
         $this->db = new Database();
     }
     
-    // Get recipient by ID
-    public function getRecipientById($id) {
-        // First get the basic recipient info
-        $this->db->query('SELECT * FROM recipients WHERE RecipientID = :id');
-        $this->db->bind(':id', $id);
-        $recipient = $this->db->single();
-        
-        if (!$recipient) {
-            return false;
-        }
-        
-        // Calculate total monetary donations
-        $this->db->query('SELECT COALESCE(SUM(d.Amount), 0) as total 
-                         FROM donations d
-                         JOIN donation_requests dr ON d.RequestID = dr.RequestID
-                         WHERE dr.RecipientID = :recipientId 
-                         AND d.DonationType = "Monetary"
-                         AND d.Status = "Completed"');
-        $this->db->bind(':recipientId', $id);
-        $result = $this->db->single();
-        $recipient->TotalMonetaryDonations = $result->total;
-        
-        // Calculate total donations count
-        $this->db->query('SELECT COUNT(*) as total 
-                         FROM donations d
-                         JOIN donation_requests dr ON d.RequestID = dr.RequestID
-                         WHERE dr.RecipientID = :recipientId
-                         AND d.Status = "Completed"');
-        $this->db->bind(':recipientId', $id);
-        $result = $this->db->single();
-        $recipient->TotalDonationsReceived = $result->total;
-        
-        return $recipient;
-    }
-
-    // Get all donation requests by recipient
-    public function getRequestsByRecipient($recipientId) {
-        $this->db->query('SELECT * FROM donation_requests 
-                         WHERE RecipientID = :recipientId 
-                         ORDER BY CreatedDate DESC');
-        $this->db->bind(':recipientId', $recipientId);
-        
-        $requests = $this->db->resultSet();
-        
-        // Get additional details for each request
-        foreach ($requests as $request) {
-            if ($request->RequestType == 'Monetary') {
-                $this->db->query('SELECT * FROM monetary_donation_details WHERE RequestID = :requestId');
-                $this->db->bind(':requestId', $request->RequestID);
-                $details = $this->db->single();
-                
-                if ($details) {
-                    $request->TargetAmount = $details->TargetAmount;
-                    $request->CurrentAmount = $details->CurrentAmount;
-                    $request->Progress = ($details->CurrentAmount / $details->TargetAmount) * 100;
-                } else {
-                    $request->Progress = 0;
-                }
-            } else {
-                $this->db->query('SELECT * FROM nonmonetary_donation_details WHERE RequestID = :requestId');
-                $this->db->bind(':requestId', $request->RequestID);
-                $details = $this->db->single();
-                
-                if ($details) {
-                    $request->ItemName = $details->ItemName;
-                    $request->QuantityNeeded = $details->QuantityNeeded;
-                    $request->QuantityReceived = $details->QuantityReceived;
-                    $request->Progress = ($details->QuantityReceived / $details->QuantityNeeded) * 100;
-                } else {
-                    $request->Progress = 0;
-                }
-            }
-            
-            // Format progress for display
-            $request->Progress = min(100, max(0, round($request->Progress)));
-            
-            // Check if image exists
-            $imagePath = APPROOT . '/../public/uploads/requests/' . $request->RequestID . '.jpg';
-            $request->HasImage = file_exists($imagePath);
-        }
-        
-        return $requests;
-    }
+ 
     
     // Get request details including monetary or non-monetary specific details
     public function getRequestDetails($requestId) {
@@ -502,223 +420,229 @@ class Recipient {
         return $this->db->resultSet();
     }
 
-
-    public function updateProfile($data) {
-        $this->db->query('UPDATE recipients SET 
-                        FirstName = :firstName, 
-                        LastName = :lastName, 
-                        ContactNumber = :contactNumber, 
-                        OrganizationName = :organization, 
-                        Address = :address 
-                        WHERE UserID = :userId');
+    public function getRecipientById($id) {
+        $this->db->query('SELECT * FROM recipients WHERE RecipientID = :id');
+        $this->db->bind(':id', $id);
         
-        // Bind values
+        return $this->db->single();
+    }
+    
+    // Get all donation requests by recipient
+    public function getRequestsByRecipient($recipientId) {
+        $this->db->query('SELECT * FROM donation_requests 
+                         WHERE RecipientID = :recipientId 
+                         ORDER BY CreatedDate DESC');
+        $this->db->bind(':recipientId', $recipientId);
+        
+        $requests = $this->db->resultSet();
+        
+        // Get additional details for each request
+        foreach ($requests as $request) {
+            if ($request->RequestType == 'Monetary') {
+                $this->db->query('SELECT * FROM monetary_donation_details WHERE RequestID = :requestId');
+                $this->db->bind(':requestId', $request->RequestID);
+                $details = $this->db->single();
+                
+                if ($details) {
+                    $request->TargetAmount = $details->TargetAmount;
+                    $request->CurrentAmount = $details->CurrentAmount;
+                    $request->Progress = ($details->CurrentAmount / $details->TargetAmount) * 100;
+                } else {
+                    $request->Progress = 0;
+                }
+            } else {
+                $this->db->query('SELECT * FROM nonmonetary_donation_details WHERE RequestID = :requestId');
+                $this->db->bind(':requestId', $request->RequestID);
+                $details = $this->db->single();
+                
+                if ($details) {
+                    $request->ItemName = $details->ItemName;
+                    $request->QuantityNeeded = $details->QuantityNeeded;
+                    $request->QuantityReceived = $details->QuantityReceived;
+                    $request->Progress = ($details->QuantityReceived / $details->QuantityNeeded) * 100;
+                } else {
+                    $request->Progress = 0;
+                }
+            }
+            
+            // Format progress for display
+            $request->Progress = min(100, max(0, round($request->Progress)));
+            
+            // Check if image exists
+            $imagePath = APPROOT . '/../public/uploads/requests/' . $request->RequestID . '.jpg';
+            $request->HasImage = file_exists($imagePath);
+        }
+        
+        return $requests;
+    }
+    
+    // Get recipient statistics
+    public function getRecipientStatistics($recipientId) {
+        // Initialize statistics object
+        $stats = (object)[
+            'totalRequests' => 0,
+            'completedRequests' => 0,
+            'pendingRequests' => 0,
+            'totalDonationsReceived' => 0,
+            'monetaryTotal' => 0,
+            'nonMonetaryTotal' => 0,
+            'uniqueDonors' => 0
+        ];
+        
+        // Get total requests count
+        $this->db->query('SELECT 
+                            COUNT(*) as totalRequests,
+                            SUM(CASE WHEN RequestStatus = "Completed" THEN 1 ELSE 0 END) as completedRequests,
+                            SUM(CASE WHEN RequestStatus IN ("Pending", "InProgress") THEN 1 ELSE 0 END) as pendingRequests
+                         FROM donation_requests 
+                         WHERE RecipientID = :recipientId');
+        $this->db->bind(':recipientId', $recipientId);
+        $requestStats = $this->db->single();
+        
+        if ($requestStats) {
+            $stats->totalRequests = $requestStats->totalRequests;
+            $stats->completedRequests = $requestStats->completedRequests;
+            $stats->pendingRequests = $requestStats->pendingRequests;
+        }
+        
+        // Get donation statistics
+        $this->db->query('SELECT 
+                            COUNT(*) as totalDonations,
+                            SUM(CASE WHEN d.DonationType = "Monetary" THEN d.Amount ELSE 0 END) as monetaryTotal,
+                            COUNT(DISTINCT d.DonorID) as uniqueDonors
+                         FROM donations d
+                         JOIN donation_requests dr ON d.RequestID = dr.RequestID
+                         WHERE dr.RecipientID = :recipientId AND d.Status = "Completed"');
+        $this->db->bind(':recipientId', $recipientId);
+        $donationStats = $this->db->single();
+        
+        if ($donationStats) {
+            $stats->totalDonationsReceived = $donationStats->totalDonations;
+            $stats->monetaryTotal = $donationStats->monetaryTotal;
+            $stats->uniqueDonors = $donationStats->uniqueDonors;
+        }
+        
+        // Get non-monetary donations total
+        $this->db->query('SELECT 
+                            SUM(d.QuantityDonated) as nonMonetaryTotal
+                         FROM donations d
+                         JOIN donation_requests dr ON d.RequestID = dr.RequestID
+                         WHERE dr.RecipientID = :recipientId 
+                           AND d.DonationType = "NonMonetary"
+                           AND d.Status = "Completed"');
+        $this->db->bind(':recipientId', $recipientId);
+        $nonMonetaryStats = $this->db->single();
+        
+        if ($nonMonetaryStats) {
+            $stats->nonMonetaryTotal = $nonMonetaryStats->nonMonetaryTotal ?? 0;
+        }
+        
+        return $stats;
+    }
+    
+    // Get recent donations for a recipient
+    public function getRecentDonationsForRecipient($recipientId, $limit = 5) {
+        $this->db->query('SELECT d.*, 
+                          CASE WHEN d.IsAnonymous = 1 THEN "Anonymous Donor" 
+                             ELSE CONCAT(dn.FirstName, " ", dn.LastName) END AS DonorName,
+                          dr.Title, dr.RequestType, dr.Category
+                         FROM donations d
+                         JOIN donation_requests dr ON d.RequestID = dr.RequestID
+                         LEFT JOIN donors dn ON d.DonorID = dn.DonorID
+                         WHERE dr.RecipientID = :recipientId
+                           AND d.Status = "Completed"
+                         ORDER BY d.DonationDate DESC
+                         LIMIT :limit');
+        
+        $this->db->bind(':recipientId', $recipientId);
+        $this->db->bind(':limit', $limit, PDO::PARAM_INT);
+        
+        return $this->db->resultSet();
+    }
+    
+    // Get upcoming deadlines for active requests
+    public function getUpcomingDeadlines($recipientId, $days = 30) {
+        $this->db->query('SELECT *
+                         FROM donation_requests
+                         WHERE RecipientID = :recipientId
+                           AND RequestStatus IN ("Pending", "InProgress")
+                           AND Deadline >= CURDATE()
+                           AND Deadline <= DATE_ADD(CURDATE(), INTERVAL :days DAY)
+                         ORDER BY Deadline ASC');
+        
+        $this->db->bind(':recipientId', $recipientId);
+        $this->db->bind(':days', $days, PDO::PARAM_INT);
+        
+        $deadlines = $this->db->resultSet();
+        
+        // Calculate days remaining for each deadline
+        foreach ($deadlines as $deadline) {
+            $today = new DateTime();
+            $deadlineDate = new DateTime($deadline->Deadline);
+            $daysRemaining = $today->diff($deadlineDate)->days;
+            $deadline->DaysRemaining = $daysRemaining;
+        }
+        
+        return $deadlines;
+    }
+    
+    // Get active requests with deadlines for calendar
+    public function getActiveRequestsWithDeadlines($recipientId) {
+        $this->db->query('SELECT RequestID, Title, Deadline
+                         FROM donation_requests
+                         WHERE RecipientID = :recipientId
+                           AND RequestStatus IN ("Pending", "InProgress")
+                           AND Deadline >= CURDATE()
+                         ORDER BY Deadline ASC');
+        
+        $this->db->bind(':recipientId', $recipientId);
+        
+        return $this->db->resultSet();
+    }
+    
+    // Get scheduled donation drop-offs
+    public function getScheduledDropOffs($recipientId) {
+        $this->db->query('SELECT d.DonationID, d.QuantityDonated, 
+                          s.DropOffDate, s.DropOffTime,
+                          n.ItemName,
+                          dr.Title
+                         FROM donations d
+                         JOIN non_monetary_donation_scheduling s ON d.DonationID = s.DonationID
+                         JOIN donation_requests dr ON d.RequestID = dr.RequestID
+                         JOIN nonmonetary_donation_details n ON dr.RequestID = n.RequestID
+                         WHERE dr.RecipientID = :recipientId
+                           AND d.Status = "Pending"
+                           AND s.DropOffDate >= CURDATE()
+                         ORDER BY s.DropOffDate, s.DropOffTime');
+        
+        $this->db->bind(':recipientId', $recipientId);
+        
+        return $this->db->resultSet();
+    }
+    
+    // Update recipient profile
+    public function updateRecipient($data) {
+        $this->db->query('UPDATE recipients 
+                         SET FirstName = :firstName, 
+                             LastName = :lastName, 
+                             ContactNumber = :contactNumber, 
+                             Address = :address
+                         WHERE RecipientID = :recipientId');
+        
         $this->db->bind(':firstName', $data['firstName']);
         $this->db->bind(':lastName', $data['lastName']);
         $this->db->bind(':contactNumber', $data['contactNumber']);
-        $this->db->bind(':organization', $data['organization']);
         $this->db->bind(':address', $data['address']);
-        $this->db->bind(':userId', $data['userId']);
+        $this->db->bind(':recipientId', $data['recipientId']);
         
-        // Execute
-        if ($this->db->execute()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
-
-    public function checkPassword($userId, $password) {
-        $this->db->query('SELECT Password FROM users WHERE UserID = :userId');
-        $this->db->bind(':userId', $userId);
-        
-        $row = $this->db->single();
-        
-        if (password_verify($password, $row->Password)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public function changePassword($userId, $newPassword) {
-        $this->db->query('UPDATE users SET Password = :password WHERE UserID = :userId');
-        
-        // Hash Password
-        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        
-        // Bind values
-        $this->db->bind(':password', $hashedPassword);
-        $this->db->bind(':userId', $userId);
-        
-        // Execute
-        if ($this->db->execute()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public function deleteAccount($userId) {
-        // Start transaction
-        $this->db->beginTransaction();
-        
-        try {
-            // Delete related records first (respecting foreign key constraints)
-            // Note: You would need to adjust these queries based on your actual database schema
-            
-            // Delete donation records
-            $this->db->query('DELETE FROM donations WHERE RequestID IN (SELECT RequestID FROM donation_requests WHERE RecipientID = (SELECT RecipientID FROM recipients WHERE UserID = :userId))');
-            $this->db->bind(':userId', $userId);
-            $this->db->execute();
-            
-            // Delete requests
-            $this->db->query('DELETE FROM donation_requests WHERE RecipientID = (SELECT RecipientID FROM recipients WHERE UserID = :userId)');
-            $this->db->bind(':userId', $userId);
-            $this->db->execute();
-            
-            // Delete recipient profile
-            $this->db->query('DELETE FROM recipients WHERE UserID = :userId');
-            $this->db->bind(':userId', $userId);
-            $this->db->execute();
-            
-            // Finally, delete the user account
-            $this->db->query('DELETE FROM users WHERE UserID = :userId');
-            $this->db->bind(':userId', $userId);
-            $this->db->execute();
-            
-            // Commit transaction
-            $this->db->commit();
-            return true;
-        } catch (Exception $e) {
-            // Rollback if any error occurs
-            $this->db->rollback();
-            return false;
-        }
-    }
-
-    public function getRequestStats($recipientId) {
-        $this->db->query('SELECT 
-                        COUNT(*) as TotalRequests,
-                        SUM(CASE WHEN Status = "completed" THEN 1 ELSE 0 END) as CompletedRequests,
-                        SUM(CASE WHEN Status = "in progress" THEN 1 ELSE 0 END) as InProgressRequests,
-                        COUNT(DISTINCT DonorID) as TotalContributors
-                        FROM donation_requests r
-                        LEFT JOIN donations d ON r.RequestID = d.RequestID
-                        WHERE r.RecipientID = :recipientId');
-        
+    
+    // Delete recipient record
+    public function deleteRecipient($recipientId) {
+        $this->db->query('DELETE FROM recipients WHERE RecipientID = :recipientId');
         $this->db->bind(':recipientId', $recipientId);
         
-        return $this->db->single();
+        return $this->db->execute();
     }
-
-    // Get recent donations
-    public function getRecentDonations($recipientId, $limit = 5) {
-        $this->db->query('SELECT d.*, 
-                        r.Title as RequestTitle, 
-                        CONCAT(donors.FirstName, " ", donors.LastName) as DonorName,
-                        d.DonationType,
-                        CASE 
-                            WHEN d.DonationType = "monetary" THEN d.Amount
-                            ELSE NULL
-                        END as Amount,
-                        CASE 
-                            WHEN d.DonationType = "item" THEN d.ItemName
-                            ELSE NULL
-                        END as ItemName
-                        FROM donations d
-                        JOIN donation_requests r ON d.RequestID = r.RequestID
-                        LEFT JOIN donors ON d.DonorID = donors.DonorID
-                        WHERE r.RecipientID = :recipientId
-                        ORDER BY d.DonationDate DESC
-                        LIMIT :limit');
-        
-        $this->db->bind(':recipientId', $recipientId);
-        $this->db->bind(':limit', $limit);
-        
-        return $this->db->resultSet();
-    }
-
-    // Get active requests
-    public function getActiveRequests($recipientId, $limit = 3) {
-        $this->db->query('SELECT r.*,
-                        IFNULL(
-                            CASE 
-                                WHEN r.RequestType = "monetary" THEN
-                                    (IFNULL(SUM(d.Amount), 0) / r.TargetAmount) * 100
-                                WHEN r.RequestType = "item" THEN
-                                    (IFNULL(COUNT(d.DonationID), 0) / r.Quantity) * 100
-                                ELSE 0
-                            END, 0
-                        ) as PercentComplete
-                        FROM donation_requests r
-                        LEFT JOIN donation_requests d ON r.RequestID = d.RequestID
-                        WHERE r.RecipientID = :recipientId 
-                        AND r.RequestStatus IN ("pending", "in progress","completed","expired")
-                        AND r.VerificationStatus IN ("pending", "approved","rejected")
-                        GROUP BY r.RequestID
-                        ORDER BY r.Deadline ASC
-                        LIMIT :limit');
-        
-        $this->db->bind(':recipientId', $recipientId);
-        $this->db->bind(':limit', $limit);
-        
-        return $this->db->resultSet();
-    }
-
-    // Get request history
-    public function getRequestHistory($recipientId, $limit = 5) {
-        $this->db->query('SELECT r.*,
-                        COUNT(DISTINCT d.DonorID) as DonorCount
-                        FROM donation_requests r
-                        LEFT JOIN donations d ON r.RequestID = d.RequestID
-                        WHERE r.RecipientID = :recipientId
-                        GROUP BY r.RequestID
-                        ORDER BY r.CreatedDate DESC
-                        LIMIT :limit');
-        
-        $this->db->bind(':recipientId', $recipientId);
-        $this->db->bind(':limit', $limit);
-        
-        return $this->db->resultSet();
-    }
-
-    // Get calendar data
-    public function getCalendarData($recipientId) {
-        $this->db->query('SELECT 
-                        RequestID,
-                        Title,
-                        CreatedDate,
-                        Deadline,
-                        RequestStatus,
-                        RequestType
-                        FROM donation_requests
-                        WHERE RecipientID = :recipientId
-                        ORDER BY CreatedDate DESC');
-        
-        $this->db->bind(':recipientId', $recipientId);
-        
-        return $this->db->resultSet();
-    }
-
-    public function getTotalDonations($recipientId) {
-        $this->db->query('SELECT 
-                            SUM(CASE 
-                                WHEN d.DonationType = "monetary" THEN d.Amount 
-                                ELSE 0 
-                            END) as TotalMonetaryDonations,
-                            COUNT(CASE 
-                                WHEN d.DonationType = "item" THEN d.DonationID 
-                                ELSE NULL 
-                            END) as TotalItemDonations
-                          FROM donations d
-                          JOIN donation_requests r ON d.RequestID = r.RequestID
-                          WHERE r.RecipientID = :recipientId');
-        
-        $this->db->bind(':recipientId', $recipientId);
-        
-        return $this->db->single();
-    }
-
-
 }

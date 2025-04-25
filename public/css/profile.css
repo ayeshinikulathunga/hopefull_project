@@ -1,7 +1,7 @@
 /* Flat Donor Profile Styles */
 
-/* Main Container */
-.donor-profile,.recipient-profile {
+.donor-profile {
+  margin-bottom: 30px;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
@@ -174,8 +174,8 @@
   margin-top: 1.5rem;
 }
 
-/* Buttons - Exact Match to Screenshots */
-.btn2 {
+/* New Donor-specific Button Styles */
+.donor-btn {
   padding: 0.65rem 1.25rem;
   font-weight: 400;
   font-size: 0.95rem;
@@ -189,49 +189,74 @@
   width: 100%;
 }
 
-.btn2 i {
+.donor-btn i {
   margin-right: 0.5rem;
 }
 
-.btn2-primary {
+.donor-btn-primary {
   background-color: var(--primary-color);
   color: white;
 }
 
-.btn2-primary:hover {
+.donor-btn-primary:hover {
   background-color: var(--primary-dark);
 }
 
-.btn2-secondary {
+.donor-btn-secondary {
   background-color: var(--secondary-light);
   color: white;
 }
 
-.btn2-secondary:hover {
+.donor-btn-secondary:hover {
   background-color: var(--secondary-color);
 }
 
-.btn2-danger {
+.donor-btn-danger {
   background-color: #f44336;
   color: white;
 }
 
-.btn2-danger:hover {
+.donor-btn-danger:hover {
   background-color: #d32f2f;
 }
 
-.btn2-outline {
+/* Modal donor buttons */
+.modal-footer .donor-btn {
+  width: 100%;
+  border-radius: 0;
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+.modal-footer .donor-btn-secondary {
+  background-color: #f8f8f8;
+  color: #777;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 10px;
+  border-radius: 30px;
+}
+
+.modal-footer .donor-btn-primary, 
+.modal-footer .donor-btn-danger {
+  background-color: var(--primary-color);
+  color: white;
+  min-width: 100%;
+  border-radius: 30px;
+}
+
+.donor-btn-outline {
   background-color: white;
   border: 1px solid var(--primary-color);
   color: var(--primary-color);
   border-radius: 30px;
 }
 
-.btn2-outline:hover {
+.donor-btn-outline:hover {
   background-color: rgba(125, 160, 255, 0.1);
 }
 
-#editProfileBtn, #changePasswordBtn {
+#changePasswordBtn {
   background-color: transparent;
   border: 1px solid var(--primary-color);
   color: var(--primary-color);
@@ -624,7 +649,7 @@
   color: var(--text-dark);
 }
 
-
+/* Modal-specific styles */
 #editProfileModal .modal-header,
 #changePasswordModal .modal-header {
   background-color: #8abaf1;

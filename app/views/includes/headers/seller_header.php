@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/admin.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/seller.css">
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/print-styles.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/seller_bank_payments.css">
  
     
 </head>
@@ -55,6 +56,19 @@
                             if(isset($data['pending_cancellations_count']) && $data['pending_cancellations_count'] > 0): 
                             ?>
                             <span class="notification-badge"><?php echo $data['pending_cancellations_count']; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+
+                    <li class="nav-item <?php echo ($data['title'] == 'Bank Payment Verification') ? 'active' : ''; ?>">
+                        <a href="<?php echo URLROOT; ?>/sellers/bankPayments">
+                            <i class="fas fa-money-check-alt"></i>
+                            <span>Bank Payments</span>
+                            <?php 
+                            // Show notification badge if there are pending bank payments
+                            if(isset($data['pending_bank_payments_count']) && $data['pending_bank_payments_count'] > 0): 
+                            ?>
+                            <span class="notification-badge"><?php echo $data['pending_bank_payments_count']; ?></span>
                             <?php endif; ?>
                         </a>
                     </li>

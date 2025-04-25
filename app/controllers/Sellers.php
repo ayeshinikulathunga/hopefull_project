@@ -136,7 +136,7 @@ public function dashboard() {
     
     $this->view('sellers/dashboard', $data);
 }
-// Add this method to your Sellers.php controller
+
 public function index() {
     // Redirect to dashboard as the default action
     $this->dashboard();
@@ -562,45 +562,7 @@ public function deleteProduct($id) {
         $this->view('sellers/orders', $data);
     }
     
-    // Order details
-    /*public function orderDetails($id) {
-        // Get seller info
-        $seller = $this->sellerModel->getSellerByUserId($_SESSION['user_id']);
-        
-        // Get order info
-        $order = $this->orderModel->getOrderById($id);
-        
-        // Check if order exists
-        if(!$order) {
-            flash('order_message', 'Order not found', 'alert alert-danger');
-            redirect('sellers/orders');
-        }
-        
-        // Get order items that belong to this seller's products
-        $orderItems = $this->sellerModel->getSellerOrderItems($id, $seller->SellerID);
-        
-        // If no items found for this seller, redirect
-        if(empty($orderItems)) {
-            flash('order_message', 'No items in this order belong to your products', 'alert alert-danger');
-            redirect('sellers/orders');
-        }
-        
-        // Get shipping details
-        $shipping = $this->orderModel->getShippingDetails($id);
-        
-        $data = [
-            'title' => 'Order Details',
-            'seller' => $seller,
-            'order' => $order,
-            'order_items' => $orderItems,
-            'shipping' => $shipping
-        ];
-        
-        $this->view('sellers/order_details', $data);
-    }*/
-    
   
-
 // View cancellation requests
 public function cancellationRequests() {
     // Get seller info
@@ -933,4 +895,116 @@ public function orderDetails($id) {
             redirect('sellers/delivery');
         }
     }
+
+
+    
+
+// Bank payment verification page
+public function bankPayments() {
+    // Get seller info
+    $seller = $this->sellerModel->getSellerByUserId($_SESSION['user_id']);
+    
+    // Load bank payment model
+    $bankPaymentModel = $this->model('BankPayment');
+    
+    // Get pending bank payments
+    $pendingPayments = $bankPaymentModel->getPendingPayments();
+    
+    // Get payment history
+    $paymentHistory = $bankPaymentModel->getPaymentHistory();
+    
+    $data = [
+        'title' => 'Bank Payment Verification',
+        'seller' => $seller,
+        'pending_payments' => $pendingPayments,
+        'payment_history' => $paymentHistory
+    ];
+    
+    $this->view('sellers/bank_payments', $data);
+}
+
+// View bank payment slip details
+public function viewBankSlip($id = null) {
+    if ($id === null) {
+        redirect('sellers/bankPayments');
+    }
+    
+    // Get seller info
+    $seller = $this->sellerModel->getSellerByUserId($_SESSION['user_id']);
+    
+    // Load bank payment model
+    $bankPaymentModel = $this->model('BankPayment');
+    
+    // Get payment details
+    $payment = $bankPaymentModel->getPaymentById($id);
+    
+    if (!$payment) {
+        flash('payment_message', 'Payment not found', 'alert alert-danger');
+        redirect('sellers/bankPayments');
+    }
+    
+    // Load order items
+    $orderItems = $this->orderModel->getOrderItems($payment->OrderID);
+    
+    $data = [
+        'title' => 'Bank Slip Details',
+        'seller' => $seller,
+        'payment' => $payment,
+        'order_items' => $orderItems
+    ];
+    
+    $this->view('sellers/bank_slip_details', $data);
+}
+
+// Process bank payment verification
+public function processBankPayment() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Sanitize POST data
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+        
+        $data = [
+            'payment_id' => trim($_POST['payment_id']),
+            'status' => trim($_POST['status']),
+            'notes' => trim($_POST['notes'] ?? ''),
+            'verified_by' => $_SESSION['user_id'],
+            'order_id' => trim($_POST['order_id'])
+        ];
+        
+        // Validate status
+        if (!in_array($data['status'], ['Verified', 'Rejected'])) {
+            flash('payment_message', 'Invalid status', 'alert alert-danger');
+            redirect('sellers/bankPayments');
+        }
+        
+        // Load bank payment model
+        $bankPaymentModel = $this->model('BankPayment');
+        
+        // Update payment status
+        if ($bankPaymentModel->updatePaymentStatus($data['payment_id'], $data['status'], $data['verified_by'], $data['notes'])) {
+            // If verified, update order status to Processing
+            if ($data['status'] == 'Verified') {
+                $this->orderModel->updateOrderStatus($data['order_id'], 'Processing');
+                flash('payment_message', 'Payment verified successfully. Order moved to Processing status.', 'alert alert-success');
+            } else {
+                // If rejected, update order status to Pending
+                $this->orderModel->updateOrderStatus($data['order_id'], 'Pending');
+                flash('payment_message', 'Payment rejected. Order status remains Pending.', 'alert alert-warning');
+            }
+            
+            redirect('sellers/bankPayments');
+        } else {
+            flash('payment_message', 'Something went wrong. Please try again.', 'alert alert-danger');
+            redirect('sellers/viewBankSlip/' . $data['payment_id']);
+        }
+    } else {
+        redirect('sellers/bankPayments');
+    }
+}
+
+
+    
+
+
+
+
 }
