@@ -64,7 +64,7 @@
             <div class="nav-links">
                 <a href="<?php echo URLROOT; ?>/recipients/dashboard">Home</a>
                 <a href="<?php echo URLROOT; ?>/recipients/requests">My Requests</a>
-                <a href="<?php echo URLROOT; ?>/about">About</a>
+                <a href="<?php echo URLROOT; ?>/recipients/createRequest">Create Request</a>
                 
                 <!-- Notification Icon with Pending Updates Badge -->
                 <a href="<?php echo URLROOT; ?>/notifications" class="notification-icon">

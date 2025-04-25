@@ -8,28 +8,28 @@
         <form action="<?php echo URLROOT; ?>/users/register_recipient" method="POST" class="auth-form" enctype="multipart/form-data">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="firstName">First Name</label>
+                    <label for="firstName">First Name<span style="color: red;" class="required">*</span></label>
                     <input type="text" name="firstName" id="firstName" class="form-control" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="lastName">Last Name</label>
+                    <label for="lastName">Last Name<span style="color: red;" class="required">*</span></label>
                     <input type="text" name="lastName" id="lastName" class="form-control" required>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">Email Address<span style="color: red;" class="required">*</span></label>
                 <input type="email" name="email" id="email" class="form-control" required>
             </div>
 
             <div class="form-group">
-                <label for="contactNumber">Contact Number</label>
+                <label for="contactNumber">Contact Number<span style="color: red;" class="required">*</span></label>
                 <input type="tel" name="contactNumber" id="contactNumber" class="form-control" required>
             </div>
 
             <div class="form-group">
-                <label for="organizationType">Organization Type</label>
+                <label for="organizationType">Organization Type<span style="color: red;" class="required">*</span></label>
                 <select name="organizationType" id="organizationType" class="form-control" required>
                     <option value="">Select Organization Type</option>
                     <option value="Individual">Individual</option>
@@ -41,23 +41,23 @@
             </div>
 
             <div class="form-group">
-                <label for="address">Address</label>
+                <label for="address">Address<span style="color: red;" class="required">*</span></label>
                 <textarea name="address" id="address" class="form-control" rows="3" required></textarea>
             </div>
 
             <div class="form-group">
-                <label for="documentation">Documentation</label>
+                <label for="documentation">Documentation<span style="color: red;" class="required">*</span></label>
                 <input type="file" name="documentation" id="documentation" class="form-control" required>
                 <small class="form-text">Please upload relevant documentation to verify your identity/organization (PDF, JPG, PNG)</small>
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">Password<span style="color: red;" class="required">*</span></label>
                 <input type="password" name="password" id="password" class="form-control" required>
             </div>
 
             <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
+                <label for="confirmPassword">Confirm Password<span style="color: red;" class="required">*</span></label>
                 <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" required>
             </div>
 

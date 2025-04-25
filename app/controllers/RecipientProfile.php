@@ -7,12 +7,23 @@ class RecipientProfile extends Controller {
     private $db;
 
     public function __construct() {
-        // Check if user is logged in and is a recipient
+        // Check if user is logged in
         if (!isLoggedIn()) {
             redirect('users/login');
-        } else if ($_SESSION['user_type'] !== 'Recipient') {
-            $this->db = new Database();
         }
+        
+        // Only allow recipients to access this controller
+        if ($_SESSION['user_type'] !== 'Recipient') {
+            // If not a recipient, redirect to appropriate profile
+            if ($_SESSION['user_type'] === 'Donor') {
+                redirect('profile');
+            } else {
+                // Handle other user types or show error
+                redirect('users/login');
+            }
+        }
+
+        $this->db = new Database();
     
         // Load models
         $this->recipientModel = $this->model('Recipient');

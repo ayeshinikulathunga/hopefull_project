@@ -149,10 +149,10 @@
                 </td>
                 <td data-label="Actions">
                     <div class="actions-cell">
-                        <a href="<?php echo URLROOT; ?>/requests/view/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="View Details">
+                        <a href="<?php echo URLROOT; ?>/recipients/viewRequest/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="View Details">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="<?php echo URLROOT; ?>/requests/edit/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="Edit">
+                        <a href="<?php echo URLROOT; ?>/recipients/editRequest/<?php echo $request->RequestID; ?>" class="btn btn-sm btn-outline" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
                     </div>
