@@ -43,7 +43,7 @@
                     <li class="<?php echo (strpos($_SERVER['REQUEST_URI'], 'allocate') !== false) ? 'active' : ''; ?>">
                         <a href="<?php echo URLROOT; ?>/regionalOfficers/allocate">
                             <i class="fas fa-dolly"></i>
-                            <span>Allocate Items</span>
+                            <span>Track Donations</span>
                         </a>
                     </li>
                     <li>

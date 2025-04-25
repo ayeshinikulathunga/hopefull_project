@@ -228,95 +228,66 @@ class RegionalOfficers extends Controller {
         $this->view('regionalOfficers/requests', $data);
     }
 
-    // Allocation page - main entry point
-    // Allocation page - main entry point
-public function allocate() {
-    // Get all nonmonetary donation requests that need items
-    $approvedRequests = $this->regionalOfficerModel->getApprovedRequests();
-    
-    // Get all available inventory
-    $inventory = $this->regionalOfficerModel->getInventoryItems($_SESSION['regional_officer_id']);
-    
-    $selectedRequest = null;
-    $requestDetails = [];
-    $matchingItems = [];
-    $message = '';
-    $messageType = '';
-    
-    // If a request is selected, get its details
-    if (isset($_GET['request_id'])) {
-        $requestId = $_GET['request_id'];
-        $requestDetails = $this->regionalOfficerModel->getNonMonetaryDetailsByRequestId($requestId);
+    // Add these methods to the RegionalOfficers controller class
+
+    public function allocate() {
+        try {
+            $donationStatus = $this->regionalOfficerModel->getNonMonetaryDonationStatus($_SESSION['regional_officer_id']);
+            $cancellationRequests = $this->regionalOfficerModel->getPendingCancellationRequests($_SESSION['regional_officer_id']);
+            
+            $data = [
+                'title' => 'Donation Allocation',
+                'donation_status' => $donationStatus,
+                'cancellation_requests' => $cancellationRequests
+            ];
+            
+            $this->view('regionalOfficers/allocate', $data);
+        } catch (Exception $e) {
+            // Temporarily comment out the redirect for testing
+            // flash('error', 'Error loading allocation page: ' . $e->getMessage(), 'alert alert-danger');
+            // redirect('regionalOfficers/dashboard');
+            echo "Error: " . $e->getMessage(); // For testing purposes
+        }
+    }
+
+public function markReceived() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $donationId = $_POST['donation_id'];
         
-        // If a detail is selected, get matching inventory
-        if (isset($_GET['detail_id'])) {
-            $detailId = $_GET['detail_id'];
-            
-            foreach ($requestDetails as $detail) {
-                if ($detail->DetailID === $detailId) {
-                    $selectedRequest = $detail;
-                    $matchingItems = $this->regionalOfficerModel->getMatchingInventoryItems($detail->ItemName);
-                    break;
-                }
-            }
+        if ($this->regionalOfficerModel->markDonationReceived($donationId)) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update status']);
         }
     }
-    
-    // Handle form submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (isset($_POST['allocate'])) {
-            $detailId = $_POST['detail_id'];
-            $itemId = $_POST['item_id'];
-            $quantity = (int)$_POST['quantity'];
-            
-            // Validate inputs
-            if (empty($detailId) || empty($itemId) || $quantity <= 0) {
-                $message = 'Please provide all required information';
-                $messageType = 'danger';
-            } else {
-                // Process allocation
-                $result = $this->regionalOfficerModel->allocateInventoryToRequest($detailId, $itemId, $quantity);
-                
-                if ($result) {
-                    $message = 'Successfully allocated inventory to donation request';
-                    $messageType = 'success';
-                    
-                    // Refresh data
-                    $approvedRequests = $this->regionalOfficerModel->getApprovedRequests();
-                    $inventory = $this->regionalOfficerModel->getInventoryItems($_SESSION['regional_officer_id']);
-                    
-                    if (isset($_GET['request_id'])) {
-                        $requestDetails = $this->regionalOfficerModel->getNonMonetaryDetailsByRequestId($_GET['request_id']);
-                        
-                        if (isset($_GET['detail_id'])) {
-                            foreach ($requestDetails as $detail) {
-                                if ($detail->DetailID === $_GET['detail_id']) {
-                                    $selectedRequest = $detail;
-                                    $matchingItems = $this->regionalOfficerModel->getMatchingInventoryItems($detail->ItemName);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    $message = 'Failed to allocate inventory. Please check quantities and try again.';
-                    $messageType = 'danger';
-                }
-            }
-        }
-    }
-    
-    $data = [
-        'title' => 'Allocate Inventory to Donations',
-        'approvedRequests' => $approvedRequests,
-        'inventory' => $inventory,
-        'requestDetails' => $requestDetails,
-        'selectedRequest' => $selectedRequest,
-        'matchingItems' => $matchingItems,
-        'message' => $message,
-        'messageType' => $messageType
-    ];
-    
-    $this->view('regionalOfficers/allocate', $data);
 }
+
+public function approveCancellation() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $donationId = $_POST['donation_id'];
+        
+        if ($this->regionalOfficerModel->approveCancellation($donationId)) {
+            flash('success_message', 'Cancellation approved successfully');
+        } else {
+            flash('error_message', 'Failed to approve cancellation', 'alert alert-danger');
+        }
+        
+        redirect('regionalOfficers/allocate');
+    }
+}
+
+public function rejectCancellation() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $donationId = $_POST['donation_id'];
+        
+        if ($this->regionalOfficerModel->rejectCancellation($donationId)) {
+            flash('success_message', 'Cancellation rejected successfully');
+        } else {
+            flash('error_message', 'Failed to reject cancellation', 'alert alert-danger');
+        }
+        
+        redirect('regionalOfficers/allocate');
+    }
+}
+
 }

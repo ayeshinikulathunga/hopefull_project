@@ -45,13 +45,7 @@
     
     <!-- Charts & Tables Row -->
     <div class="dashboard-grid">
-        <!-- Analytics Chart -->
-        <div class="dashboard-card">
-            <h3>Verification Analytics</h3>
-            <div class="chart-container">
-                <canvas id="verificationChart"></canvas>
-            </div>
-        </div>
+        
         
         <!-- Pending Recipients Table -->
         <div class="dashboard-card">
@@ -135,66 +129,6 @@
     </div>
 </div>
 
-<!-- Include Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle sidebar expansion on click
-    const sidebar = document.getElementById('adminSidebar');
-    sidebar.addEventListener('click', function() {
-        sidebar.classList.toggle('expanded');
-    });
-    
-    // Chart.js implementation
-    const ctx = document.getElementById('verificationChart').getContext('2d');
-    const verificationChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Recipients', 'Requests'],
-            datasets: [
-                {
-                    label: 'Pending',
-                    data: [
-                        <?php echo $data['stats']->pendingRecipients; ?>, 
-                        <?php echo $data['stats']->pendingRequests; ?>
-                    ],
-                    backgroundColor: 'rgba(255, 159, 64, 0.7)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Approved',
-                    data: [
-                        <?php echo $data['stats']->approvedRecipients; ?>, 
-                        <?php echo $data['stats']->approvedRequests; ?>
-                    ],
-                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Rejected',
-                    data: [
-                        <?php echo $data['stats']->rejectedRecipients; ?>, 
-                        <?php echo $data['stats']->rejectedRequests; ?>
-                    ],
-                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-});
-</script>
 
 <!-- Add some additional CSS for dashboard-specific elements -->
 <style>

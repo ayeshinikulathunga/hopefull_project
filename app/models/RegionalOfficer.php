@@ -160,96 +160,59 @@ class RegionalOfficer {
         return $this->db->resultSet();
     }
 
-    // Get available inventory items that match donation requirements
-    public function getMatchingInventoryItems($itemName) {
-        // First look for exact match
-        $this->db->query("SELECT * FROM regional_inventory 
-                          WHERE Status = 'Available' AND Quantity > 0 AND ItemName = :itemName
-                          ORDER BY ItemName");
-        $this->db->bind(':itemName', $itemName);
-        $exactMatches = $this->db->resultSet();
-        
-        if (!empty($exactMatches)) {
-            return $exactMatches;
-        }
-        
-        // If no exact match, look for similar items
-        $keywords = explode(' ', $itemName);
-        $likeClauses = [];
-        $params = [];
-        
-        foreach ($keywords as $index => $keyword) {
-            if (strlen($keyword) >= 3) { // Only use keywords of sufficient length
-                $param = ':keyword' . $index;
-                $likeClauses[] = "ItemName LIKE $param";
-                $params[$param] = '%' . $keyword . '%';
-            }
-        }
-        
-        if (!empty($likeClauses)) {
-            $likeQuery = "SELECT * FROM regional_inventory 
-                          WHERE Status = 'Available' AND Quantity > 0 
-                          AND (" . implode(' OR ', $likeClauses) . ")
-                          ORDER BY ItemName";
-            
-            $this->db->query($likeQuery);
-            
-            foreach ($params as $param => $value) {
-                $this->db->bind($param, $value);
-            }
-            
-            return $this->db->resultSet();
-        }
-        
-        // If no matches or no valid keywords, return all available items
-        $this->db->query("SELECT * FROM regional_inventory 
-                          WHERE Status = 'Available' AND Quantity > 0
-                          ORDER BY Category, ItemName");
-        return $this->db->resultSet();
-    }
-    // Allocate inventory to donation request
-    // Allocate inventory to donation request
-// Allocate inventory to donation request
-public function allocateInventoryToRequest($detailId, $itemId, $quantity) {
-    // Start a transaction to ensure data integrity
-    $this->db->beginTransaction();
+    // Add these methods to the RegionalOfficer class
 
-    try {
-        // 1. Get current inventory quantity
-        $this->db->query("SELECT Quantity FROM regional_inventory WHERE ItemID = :itemId FOR UPDATE");
-        $this->db->bind(':itemId', $itemId);
-        $inventory = $this->db->single();
+// Get non-monetary donation status for allocation
+public function getNonMonetaryDonationStatus() {
+    $this->db->query('SELECT d.DonationID, d.DonorID, u.Username as DonorName, 
+                  nmd.ItemName, d.QuantityDonated, d.Status, 
+                  nms.DropOffDate, nms.DropOffTime
+                  FROM donations d
+                  JOIN users u ON d.DonorID = u.UserID
+                  JOIN donation_requests r ON d.RequestID = r.RequestID
+                  JOIN nonmonetary_donation_details nmd ON r.RequestID = nmd.RequestID
+                  LEFT JOIN non_monetary_donation_scheduling nms ON d.DonationID = nms.DonationID
+                  WHERE d.DonationType = "NonMonetary" 
+                  AND d.Status != "Cancelled"
+                  ORDER BY d.DonationDate DESC');
+    
+    return $this->db->resultSet();
+}
 
-        if (!$inventory || $inventory->Quantity < $quantity) {
-            // Not enough inventory
-            $this->db->cancelTransaction();
-            return false;
-        }
+// Get pending cancellation requests
+public function getPendingCancellationRequests() {
+    $this->db->query('SELECT dc.ID, dc.DonationID, dc.CancellationReason, dc.CancellationDate,
+                 u.Username as DonorName, nmd.ItemName
+                 FROM donation_cancellations dc
+                 JOIN donations d ON dc.DonationID = d.DonationID
+                 JOIN users u ON d.DonorID = u.UserID
+                 JOIN donation_requests r ON d.RequestID = r.RequestID
+                 JOIN nonmonetary_donation_details nmd ON r.RequestID = nmd.RequestID
+                 WHERE d.Status = "Pending"
+                 ORDER BY dc.CancellationDate DESC');
+    
+    return $this->db->resultSet();
+}
 
-        // 2. Deduct quantity from regional inventory
-        $this->db->query("UPDATE regional_inventory 
-                          SET Quantity = Quantity - :qty 
-                          WHERE ItemID = :itemId");
-        $this->db->bind(':qty', $quantity);
-        $this->db->bind(':itemId', $itemId);
-        $this->db->execute();
+// Mark donation as received
+public function markDonationReceived($donationId) {
+    $this->db->query('UPDATE donations SET Status = "Completed" WHERE DonationID = :donationId');
+    $this->db->bind(':donationId', $donationId);
+    return $this->db->execute();
+}
 
-        // 3. Update quantity received in donation detail
-        $this->db->query("UPDATE nonmonetary_donation_details 
-                          SET QuantityReceived = QuantityReceived + :qty 
-                          WHERE DetailID = :detailId");
-        $this->db->bind(':qty', $quantity);
-        $this->db->bind(':detailId', $detailId);
-        $this->db->execute();
+// Approve cancellation request
+public function approveCancellation($donationId) {
+    $this->db->query('UPDATE donations SET Status = "Cancelled" WHERE DonationID = :donationId');
+    $this->db->bind(':donationId', $donationId);
+    return $this->db->execute();
+}
 
-        // 4. Commit transaction
-        $this->db->commit();
-        return true;
-    } catch (Exception $e) {
-        // Rollback on error
-        $this->db->cancelTransaction();
-        return false;
-    }
+// Reject cancellation request
+public function rejectCancellation($donationId) {
+    $this->db->query('DELETE FROM donation_cancellations WHERE DonationID = :donationId');
+    $this->db->bind(':donationId', $donationId);
+    return $this->db->execute();
 }
 
     }
