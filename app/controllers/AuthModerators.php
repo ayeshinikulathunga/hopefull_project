@@ -26,27 +26,34 @@ class AuthModerators extends Controller {
         try {
             // Get verification statistics
             $stats = $this->moderatorModel->getVerificationStats();
-            
+    
+            // Get request statistics (includes pending, inProgress, completed, expired)
+            $requestStats = $this->moderatorModel->getRequestStats();
+    
             // Get pending recipients and requests
             $pendingRecipients = $this->moderatorModel->getPendingRecipients();
             $pendingRequests = $this->moderatorModel->getPendingRequests();
-            
+    
             // Get recently verified recipients
             $recentlyVerified = $this->moderatorModel->getRecentlyVerifiedRecipients();
-            
+    
             // Get moderator info
             $moderator = $this->moderatorModel->getModeratorByUserId($_SESSION['user_id']);
-            
+    
             $data = [
                 'title' => 'Authentication Moderator Dashboard',
                 'stats' => $stats,
+                'requestStats' => $requestStats, // ✅ New data added
                 'pendingRecipients' => $pendingRecipients,
                 'pendingRequests' => $pendingRequests,
                 'recentlyVerified' => $recentlyVerified,
                 'moderator' => $moderator
             ];
-            
+    
             $this->view('authModerators/dashboard', $data);
+            $this->view('authModerators/manageRecipients', $data);
+            $this->view('authModerators/manageRequests', $data);
+    
         } catch (Exception $e) {
             // Log error
             error_log("Error in auth moderator dashboard: " . $e->getMessage());
@@ -92,11 +99,11 @@ class AuthModerators extends Controller {
     
     public function manageRequests() {
         try {
-            $pendingRequests = $this->moderatorModel->getPendingRequests();
+            $approvedRequests = $this->moderatorModel->getApprovedRequests(); // new addition
             
             $data = [
                 'title' => 'Manage Donation Requests',
-                'pendingRequests' => $pendingRequests
+                'approvedRequests' => $approvedRequests // pass to view
             ];
             
             $this->view('authModerators/manageRequests', $data);
@@ -106,29 +113,78 @@ class AuthModerators extends Controller {
         }
     }
     
+    
     public function viewRecipient($id) {
         // Code to view a specific recipient's details
     }
-    
-    public function approveRecipient($id) {
-        if($this->moderatorModel->approveRecipient($id, $_SESSION['moderator_id'])) {
-            flash('success_message', 'Recipient approved successfully');
-        } else {
-            flash('error_message', 'Failed to approve recipient', 'alert alert-danger');
+
+    public function verify_recipient() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
         }
-        
-        redirect('authModerators/manageRecipients');
+    
+    
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $recipientId = $_POST['recipient_id'];
+            $status = $_POST['status'];
+            $moderatorId = $_SESSION['user_id'];
+    
+            if ($this->moderatorModel->verifyRecipient($recipientId, $status, $moderatorId)) {
+                flash('success_message', 'Recipient verification updated successfully');
+            } else {
+                flash('error_message', 'Failed to update recipient verification', 'alert alert-danger');
+            }
+    
+            // ✅ Redirect to manageRecipients, not dashboard
+            redirect('authModerators/manageRecipients');
+        }
     }
     
-    public function rejectRecipient($id) {
-        if($this->moderatorModel->rejectRecipient($id, $_SESSION['moderator_id'])) {
-            flash('success_message', 'Recipient rejected successfully');
+    
+    public function approve() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $recipientId = $_POST['recipient_id']; // Get the recipient ID from the POST data
+            $status = 'Approved'; // Set the status to Approved
+            
+            // Call the model method to update the verification status
+            if ($this->moderatorModel->verifyRecipient($recipientId, $status)) {
+                $_SESSION['moderator_success'] = 'Recipient approved successfully';
+                header('Location: ' . URLROOT . '/authModerators/manageRecipients');
+                exit;
+            } else {
+                $_SESSION['moderator_error'] = 'Failed to approve recipient';
+                header('Location: ' . URLROOT . '/authModerators/manageRecipients');
+                exit;
+            }
         } else {
-            flash('error_message', 'Failed to reject recipient', 'alert alert-danger');
+            // Redirect to verifications page if not POST
+            header('Location: ' . URLROOT . '/authModerators/manageRecipients');
+            exit;
         }
-        
-        redirect('authModerators/manageRecipients');
     }
+
+    public function reject() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $recipientId = $_POST['recipient_id']; // Get the recipient ID from the POST data
+            $status = 'Rejected'; // Set the status to Rejected
+            
+            // Call the model method to update the verification status
+            if ($this->moderatorModel->verifyRecipient($recipientId, $status)) {
+                $_SESSION['moderator_success'] = 'Recipient rejected successfully';
+                header('Location: ' . URLROOT . '/authModerators/manageRecipients');
+                exit;
+            } else {
+                $_SESSION['moderator_error'] = 'Failed to reject recipient';
+                header('Location: ' . URLROOT . '/authModerators/manageRecipients');
+                exit;
+            }
+        }    else {
+                // Redirect to verifications page if not POST
+                header('Location: ' . URLROOT . '/authModerators/manageRecipients');
+                exit;
+            }
+    }
+    
     
     public function viewRequest($id) {
         // Code to view a specific request's details
@@ -153,4 +209,22 @@ class AuthModerators extends Controller {
         
         redirect('authModerators/manageRequests');
     }
+
+    public function updateRequestStatus() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $requestID = $_POST['request_id'];
+            $newStatus = $_POST['new_status'];
+    
+            if ($this->moderatorModel->updateRequestStatus($requestID, $newStatus)) {
+                $_SESSION['moderator_success'] = 'Request status updated successfully.';
+            } else {
+                $_SESSION['moderator_error'] = 'Error updating request status.';
+            }
+    
+            redirect('authModerators/manageRequests');
+        } else {
+            redirect('authModerators/manageRequests');
+        }
+    }
+    
 }

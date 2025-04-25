@@ -69,7 +69,7 @@ class RegionalOfficers extends Controller {
             $inventoryItems = $this->regionalOfficerModel->getInventoryItems($_SESSION['regional_officer_id']);
             
             $data = [
-                'title' => 'Inventory Management',
+                'title' => 'Regional Inventory Management',
                 'inventoryItems' => $inventoryItems
             ];
             
@@ -134,10 +134,10 @@ class RegionalOfficers extends Controller {
     }
     
     public function editItem($id) {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Process form
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-            
+    
             $data = [
                 'itemId' => $id,
                 'itemName' => trim($_POST['itemName']),
@@ -147,23 +147,23 @@ class RegionalOfficers extends Controller {
                 'officerId' => $_SESSION['regional_officer_id'],
                 'errors' => []
             ];
-            
+    
             // Validation
-            if(empty($data['itemName'])) {
+            if (empty($data['itemName'])) {
                 $data['errors']['itemName'] = 'Please enter item name';
             }
-            
-            if(empty($data['category'])) {
+    
+            if (empty($data['category'])) {
                 $data['errors']['category'] = 'Please select a category';
             }
-            
-            if($data['quantity'] <= 0) {
+    
+            if ($data['quantity'] <= 0) {
                 $data['errors']['quantity'] = 'Quantity must be greater than 0';
             }
-            
+    
             // If no errors, update item
-            if(empty($data['errors'])) {
-                if($this->regionalOfficerModel->updateInventoryItem($data)) {
+            if (empty($data['errors'])) {
+                if ($this->regionalOfficerModel->updateInventoryItem($data)) {
                     flash('success_message', 'Item updated successfully');
                     redirect('regionalOfficers/inventory');
                 } else {
@@ -171,29 +171,30 @@ class RegionalOfficers extends Controller {
                     $this->view('regionalOfficers/editItem', $data);
                 }
             } else {
+                // Reload form with errors
                 $this->view('regionalOfficers/editItem', $data);
             }
         } else {
-            // Get existing item data
+            // Load item data from the model
             $item = $this->regionalOfficerModel->getInventoryItemById($id);
-            
-            // Check if item exists and belongs to this officer
-            if(!$item || $item->RegionalOfficerID != $_SESSION['regional_officer_id']) {
-                flash('error', 'Item not found or unauthorized', 'alert alert-danger');
+    
+            // Check if item exists and belongs to current officer
+            if ($item && $item->RegionalOfficerID == $_SESSION['regional_officer_id']) {
+                $data = [
+                    'title' => 'Edit Inventory Item',
+                    'itemId' => $item->ItemID,
+                    'itemName' => $item->ItemName,
+                    'category' => $item->Category,
+                    'quantity' => $item->Quantity,
+                    'status' => $item->Status,
+                    'errors' => []
+                ];
+    
+                $this->view('regionalOfficers/editItem', $data);
+            } else {
+                flash('error_message', 'Invalid item or unauthorized access', 'alert alert-danger');
                 redirect('regionalOfficers/inventory');
             }
-            
-            $data = [
-                'title' => 'Edit Inventory Item',
-                'itemId' => $item->ItemID,
-                'itemName' => $item->ItemName,
-                'category' => $item->Category,
-                'quantity' => $item->Quantity,
-                'status' => $item->Status,
-                'errors' => []
-            ];
-            
-            $this->view('regionalOfficers/editItem', $data);
         }
     }
     
@@ -216,26 +217,77 @@ class RegionalOfficers extends Controller {
     }
     
     public function requests() {
+        // Get all approved requests
+        $approvedRequests = $this->regionalOfficerModel->getApprovedRequests();
+        
+        $data = [
+            'title' => 'Approved Requests',
+            'approvedRequests' => $approvedRequests
+        ];
+
+        $this->view('regionalOfficers/requests', $data);
+    }
+
+    // Add these methods to the RegionalOfficers controller class
+
+    public function allocate() {
         try {
-            $pendingRequests = $this->regionalOfficerModel->getPendingNonMonetaryRequests();
+            $donationStatus = $this->regionalOfficerModel->getNonMonetaryDonationStatus($_SESSION['regional_officer_id']);
+            $cancellationRequests = $this->regionalOfficerModel->getPendingCancellationRequests($_SESSION['regional_officer_id']);
             
             $data = [
-                'title' => 'Donation Requests',
-                'pendingRequests' => $pendingRequests
+                'title' => 'Donation Allocation',
+                'donation_status' => $donationStatus,
+                'cancellation_requests' => $cancellationRequests
             ];
             
-            $this->view('regionalOfficers/requests', $data);
+            $this->view('regionalOfficers/allocate', $data);
         } catch (Exception $e) {
-            flash('error', 'An error occurred while loading requests', 'alert alert-danger');
-            redirect('regionalOfficers/dashboard');
+            // Temporarily comment out the redirect for testing
+            // flash('error', 'Error loading allocation page: ' . $e->getMessage(), 'alert alert-danger');
+            // redirect('regionalOfficers/dashboard');
+            echo "Error: " . $e->getMessage(); // For testing purposes
         }
     }
-    
-    public function viewRequest($id) {
-        // Implementation for viewing a specific request
+
+public function markReceived() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $donationId = $_POST['donation_id'];
+        
+        if ($this->regionalOfficerModel->markDonationReceived($donationId)) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update status']);
+        }
     }
-    
-    public function allocateItems($requestId) {
-        // Implementation for allocating inventory items to a request
+}
+
+public function approveCancellation() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $donationId = $_POST['donation_id'];
+        
+        if ($this->regionalOfficerModel->approveCancellation($donationId)) {
+            flash('success_message', 'Cancellation approved successfully');
+        } else {
+            flash('error_message', 'Failed to approve cancellation', 'alert alert-danger');
+        }
+        
+        redirect('regionalOfficers/allocate');
     }
+}
+
+public function rejectCancellation() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $donationId = $_POST['donation_id'];
+        
+        if ($this->regionalOfficerModel->rejectCancellation($donationId)) {
+            flash('success_message', 'Cancellation rejected successfully');
+        } else {
+            flash('error_message', 'Failed to reject cancellation', 'alert alert-danger');
+        }
+        
+        redirect('regionalOfficers/allocate');
+    }
+}
+
 }

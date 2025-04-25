@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/admin.css">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/userStyles.css">
 </head>
 <body class="admin-panel">
     <div class="admin-layout">
@@ -42,7 +43,7 @@
                     <li class="<?php echo (strpos($_SERVER['REQUEST_URI'], 'allocate') !== false) ? 'active' : ''; ?>">
                         <a href="<?php echo URLROOT; ?>/regionalOfficers/allocate">
                             <i class="fas fa-dolly"></i>
-                            <span>Allocate Items</span>
+                            <span>Track Donations</span>
                         </a>
                     </li>
                     <li>
