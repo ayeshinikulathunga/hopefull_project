@@ -163,56 +163,84 @@ class RegionalOfficer {
     // Add these methods to the RegionalOfficer class
 
 // Get non-monetary donation status for allocation
+// This fixes the getNonMonetaryDonationStatus method to accept the officer ID parameter
+
+// Updated getNonMonetaryDonationStatus method without filtering
+// Corrected getNonMonetaryDonationStatus method
 public function getNonMonetaryDonationStatus() {
-    $this->db->query('SELECT d.DonationID, d.DonorID, u.Username as DonorName, 
-                  nmd.ItemName, d.QuantityDonated, d.Status, 
-                  nms.DropOffDate, nms.DropOffTime
-                  FROM donations d
-                  JOIN users u ON d.DonorID = u.UserID
-                  JOIN donation_requests r ON d.RequestID = r.RequestID
-                  JOIN nonmonetary_donation_details nmd ON r.RequestID = nmd.RequestID
-                  LEFT JOIN non_monetary_donation_scheduling nms ON d.DonationID = nms.DonationID
-                  WHERE d.DonationType = "NonMonetary" 
-                  AND d.Status != "Cancelled"
-                  ORDER BY d.DonationDate DESC');
+    $this->db->query('SELECT d.DonationID, d.DonorID, 
+                     CONCAT(dn.FirstName, " ", dn.LastName) as DonorName, 
+                     nmd.ItemName, d.QuantityDonated, d.Status, 
+                     nms.DropOffDate, nms.DropOffTime
+                     FROM donations d
+                     JOIN donors dn ON d.DonorID = dn.DonorID
+                     JOIN donation_requests r ON d.RequestID = r.RequestID
+                     JOIN nonmonetary_donation_details nmd ON r.RequestID = nmd.RequestID
+                     LEFT JOIN non_monetary_donation_scheduling nms ON d.DonationID = nms.DonationID
+                     WHERE d.DonationType = "NonMonetary" 
+                     AND d.Status IN ("Pending", "Completed")
+                     ORDER BY d.DonationDate DESC');
     
     return $this->db->resultSet();
 }
 
-// Get pending cancellation requests
+// Corrected getPendingCancellationRequests method
 public function getPendingCancellationRequests() {
     $this->db->query('SELECT dc.ID, dc.DonationID, dc.CancellationReason, dc.CancellationDate,
-                 u.Username as DonorName, nmd.ItemName
-                 FROM donation_cancellations dc
-                 JOIN donations d ON dc.DonationID = d.DonationID
-                 JOIN users u ON d.DonorID = u.UserID
-                 JOIN donation_requests r ON d.RequestID = r.RequestID
-                 JOIN nonmonetary_donation_details nmd ON r.RequestID = nmd.RequestID
-                 WHERE d.Status = "Pending"
-                 ORDER BY dc.CancellationDate DESC');
+                     CONCAT(dn.FirstName, " ", dn.LastName) as DonorName, nmd.ItemName
+                     FROM donation_cancellations dc
+                     JOIN donations d ON dc.DonationID = d.DonationID
+                     JOIN donors dn ON d.DonorID = dn.DonorID
+                     JOIN donation_requests r ON d.RequestID = r.RequestID
+                     JOIN nonmonetary_donation_details nmd ON r.RequestID = nmd.RequestID
+                     ORDER BY dc.CancellationDate DESC');
     
     return $this->db->resultSet();
 }
-
 // Mark donation as received
-public function markDonationReceived($donationId) {
+public function markReceived($donationId) {
     $this->db->query('UPDATE donations SET Status = "Completed" WHERE DonationID = :donationId');
     $this->db->bind(':donationId', $donationId);
     return $this->db->execute();
 }
 
+public function markPending($donationId) {
+        
+        $this->db->query('UPDATE donations SET Status = "Pending" WHERE DonationID = :donationId');
+        $this->db->bind(':donationId', $donationId);
+        
+        return $this->db->execute();
+}
+
 // Approve cancellation request
 public function approveCancellation($donationId) {
-    $this->db->query('UPDATE donations SET Status = "Cancelled" WHERE DonationID = :donationId');
-    $this->db->bind(':donationId', $donationId);
-    return $this->db->execute();
-}
-
-// Reject cancellation request
-public function rejectCancellation($donationId) {
     $this->db->query('DELETE FROM donation_cancellations WHERE DonationID = :donationId');
     $this->db->bind(':donationId', $donationId);
-    return $this->db->execute();
+    $this->db->execute();
+
+    $this->db->query('UPDATE donations SET Status = "Cancelled" WHERE DonationID = :donationId');
+    $this->db->bind(':donationId', $donationId);
+    $this->db->execute();
+
+    return true;
 }
 
-    }
+public function rejectCancellation($donationId) {
+    $this->db->beginTransaction();
+    
+        $this->db->query('DELETE FROM donation_cancellations WHERE DonationID = :donationId');
+        $this->db->bind(':donationId', $donationId);
+        $this->db->execute();
+        
+
+        $this->db->query('UPDATE donations SET Status = :status WHERE DonationID = :donationId');
+        $this->db->bind(':status', 'pending');
+        $this->db->bind(':donationId', $donationId);
+        $this->db->execute();
+
+        $this->db->commit();
+        return true;
+   
+}
+
+}

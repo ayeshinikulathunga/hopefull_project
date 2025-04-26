@@ -117,11 +117,12 @@ public function register_recipient() {
             'contactNumber' => trim($_POST['contactNumber']),
             'address' => trim($_POST['address']),
             'organizationType' => trim($_POST['organizationType']),
-            'documentationURL' => $documentationURL, // Now this will be the filename
+            'documentationURL' => $documentationURL, 
             'password' => trim($_POST['password']),
             'confirmPassword' => trim($_POST['confirmPassword']),
             'terms' => isset($_POST['terms']),
-            'errors' => []
+            'errors' => [],
+            'pending_approval' => false
         ];
 
         // Validation
@@ -159,10 +160,20 @@ public function register_recipient() {
 
         // Make sure errors are empty
         if(empty($data['errors'])) {
-            // Register Recipient
+            $existingUser = $this->userModel->findUserByEmail($data['email']);
+            if($existingUser && $this->userModel->findUserByEmail($data['email'])){
+                if($existingUser && $this->userModel->hasPendingRecipientRequest($existingUser->UserID)){
+                    $data['pending_approval'] = true;
+                    flash('register_info', 'You already have a pending registration request. Please wait for approval','alert alert-danger');
+                    $this->view('users/register_recipient', $data);
+                    return;
+                }
+
+            }
             if($this->userModel->registerRecipient($data)) {
-                flash('register_success', 'You are registered as a recipient and can log in');
-                redirect('users/login');
+                $data['pending_approval'] = true;
+                flash('register_success', 'Your registration request has been submitted for approval.', 'alert alert-success');
+                $this->view('users/register_recipient', $data);
             } else {
                 $data['errors']['general'] = 'Something went wrong during registration';
                 $this->view('users/register_recipient', $data);
@@ -184,8 +195,17 @@ public function register_recipient() {
             'documentationURL' => '',
             'password' => '',
             'confirmPassword' => '',
-            'errors' => []
+            'errors' => [],
+            'pending_approval' => false
         ];
+
+        if(isset($_SESSION['user_email'])){
+            $existingUser = $this->userModel->findUserByEmail($_SESSION['user_email']);
+            if($existingUser && $this->userModel->hasPendingRecipientRequest($existingUser->UserID)){
+                $data['pending_approval'] = true;
+                flash('register_info', 'You already have a pending registration request. Please wait for approval','alert alert-danger');
+            }
+        }
 
         $this->view('users/register_recipient', $data);
     }
@@ -244,17 +264,31 @@ public function register_recipient() {
                 // Check and set logged in user
                 $loggedInUser = $this->userModel->login($data['email'], $data['password']);
                 
-                if($loggedInUser) {
-                    error_log('Login Successful for: ' . $data['email']);
-                    
-                    // Create session
-                    $this->createUserSession($loggedInUser);
-                } else {
+                if (!$loggedInUser) {
                     error_log('Login Failed for email: ' . $data['email']);
-                    
                     $data['errors']['login'] = 'Invalid email or password';
                     $this->view('users/login', $data);
+                    return;
                 }
+                
+                if ($loggedInUser->UserType === 'Recipient') {
+                    $recipientStatus = $this->userModel->getRecipientVerificationStatus($loggedInUser->UserID);
+                
+                    if ($recipientStatus === 'Pending') {
+                        flash('login_error', 'Your account is pending approval. Please wait for administrator approval.', 'alert alert-danger');
+                        redirect('users/login');
+                        return;
+                    }
+                
+                    if ($recipientStatus === 'Rejected') {
+                        flash('login_error', 'Your account request has been rejected. Please contact support for more information.', 'alert alert-danger');
+                        redirect('users/register_recipient');
+                        return;
+                    }
+                }
+                
+                error_log('Login Successful for: ' . $data['email']);
+                $this->createUserSession($loggedInUser);
             } else {
                 // Load view with errors
                 $this->view('users/login', $data);
@@ -270,6 +304,8 @@ public function register_recipient() {
             
             $this->view('users/login', $data);
         }
+
+        
     }
     
     

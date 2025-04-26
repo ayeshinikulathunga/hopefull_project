@@ -45,11 +45,11 @@
 
                             <td>
                                 <div class="btn-group">
-                                    <form action="<?= URLROOT ?>/authModerators/approve" method="post" style="display:inline;">
+                                    <form action="<?= URLROOT ?>/authModerators/approve" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to approve this request?');">
                                         <input type="hidden" name="recipient_id" value="<?= $recipient->RecipientID ?>">
                                         <button type="submit" class="btn btn-sm btn-success">Approve</button>
                                     </form>
-                                    <form action="<?= URLROOT ?>/authModerators/reject" method="post" style="display:inline;">
+                                    <form action="<?= URLROOT ?>/authModerators/reject" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to approve this request?');">
                                         <input type="hidden" name="recipient_id" value="<?= $recipient->RecipientID ?>">
                                         <button type="submit" class="btn btn-sm btn-danger">Reject</button>
                                     </form>

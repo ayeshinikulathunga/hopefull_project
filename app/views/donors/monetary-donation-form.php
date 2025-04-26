@@ -72,30 +72,7 @@
                             </div>
                         </div>
                         
-                        <!-- Credit Card Form (displayed by default) -->
-                        <!--<div id="creditCardForm" class="credit-card-form">
-                            <div class="form-group">
-                                <label for="card_name">Cardholder Name</label>
-                                <input type="text" id="card_name" name="card_name" class="form-control" placeholder="Name on card">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="card_number">Card Number</label>
-                                <input type="text" id="card_number" name="card_number" class="form-control" placeholder="1234 5678 9012 3456">
-                            </div>
-                            
-                            <div class="card-row">
-                                <div class="form-group">
-                                    <label for="expiry_date">Expiry Date</label>
-                                    <input type="text" id="expiry_date" name="expiry_date" class="form-control" placeholder="MM/YY">
-                                </div>
-                                
-                                <div class="form-group card-cvv">
-                                    <label for="cvv">CVV</label>
-                                    <input type="text" id="cvv" name="cvv" class="form-control" placeholder="123">
-                                </div>
-                            </div>
-                        </div>-->
+                        
                         
                         <!-- Bank Transfer Info (hidden by default) -->
                         <div id="bankTransferInfo" class="payment-info" style="display: none;">
@@ -295,49 +272,36 @@
             });
         });
         
-        // Payment method switching
         const paymentPayhereRadio = document.getElementById('payment_payhere');
-        const paymentBankRadio = document.getElementById('payment_bank');
-        const paymentMobileRadio = document.getElementById('payment_mobile');
-        //const creditCardForm = document.getElementById('creditCardForm');
-        const bankTransferInfo = document.getElementById('bankTransferInfo');
-        const mobilePaymentInfo = document.getElementById('mobilePaymentInfo');
-        const summaryPaymentMethod = document.getElementById('summaryPaymentMethod');
-        
-        paymentCardRadio.addEventListener('change', function() {
-            if(this.checked) {
-                creditCardForm.style.display = 'block';
-                bankTransferInfo.style.display = 'none';
-                mobilePaymentInfo.style.display = 'none';
-                summaryPaymentMethod.textContent = 'Credit/Debit Card';
-            }
-        });
-
-        paymentPayhereRadio.addEventListener('change', function() {
+    const paymentBankRadio = document.getElementById('payment_bank');
+    const paymentMobileRadio = document.getElementById('payment_mobile');
+    const bankTransferInfo = document.getElementById('bankTransferInfo');
+    const mobilePaymentInfo = document.getElementById('mobilePaymentInfo');
+    const summaryPaymentMethod = document.getElementById('summaryPaymentMethod');
+    
+    paymentPayhereRadio.addEventListener('change', function() {
         if(this.checked) {
             bankTransferInfo.style.display = 'none';
+            mobilePaymentInfo.style.display = 'none';
             summaryPaymentMethod.textContent = 'Pay Online (PayHere)';
         }
     });
     
-        
-        paymentBankRadio.addEventListener('change', function() {
-            if(this.checked) {
-                creditCardForm.style.display = 'none';
-                bankTransferInfo.style.display = 'block';
-                mobilePaymentInfo.style.display = 'none';
-                summaryPaymentMethod.textContent = 'Bank Transfer';
-            }
-        });
-        
-        paymentMobileRadio.addEventListener('change', function() {
-            if(this.checked) {
-                creditCardForm.style.display = 'none';
-                bankTransferInfo.style.display = 'none';
-                mobilePaymentInfo.style.display = 'block';
-                summaryPaymentMethod.textContent = 'Mobile Payment';
-            }
-        });
+    paymentBankRadio.addEventListener('change', function() {
+        if(this.checked) {
+            bankTransferInfo.style.display = 'block';
+            mobilePaymentInfo.style.display = 'none';
+            summaryPaymentMethod.textContent = 'Bank Transfer';
+        }
+    });
+    
+    paymentMobileRadio.addEventListener('change', function() {
+        if(this.checked) {
+            bankTransferInfo.style.display = 'none';
+            mobilePaymentInfo.style.display = 'block';
+            summaryPaymentMethod.textContent = 'Mobile Payment';
+        }
+    });
         
         // Anonymous donation toggle
         const anonymousCheckbox = document.getElementById('anonymous');

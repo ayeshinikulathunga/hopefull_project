@@ -99,11 +99,11 @@ class AuthModerators extends Controller {
     
     public function manageRequests() {
         try {
-            $approvedRequests = $this->moderatorModel->getApprovedRequests(); // new addition
+            $pendingRequests = $this->moderatorModel->getPendingRequests(); // new addition
             
             $data = [
                 'title' => 'Manage Donation Requests',
-                'approvedRequests' => $approvedRequests // pass to view
+                'pendingRequests' => $pendingRequests // pass to view
             ];
             
             $this->view('authModerators/manageRequests', $data);
@@ -191,7 +191,16 @@ class AuthModerators extends Controller {
     }
     
     public function approveRequest($id) {
-        if($this->moderatorModel->approveRequest($id, $_SESSION['moderator_id'])) {
+        // Get moderator ID from user ID
+        $moderator = $this->moderatorModel->getModeratorByUserId($_SESSION['user_id']);
+        
+        if(!$moderator) {
+            flash('error_message', 'Moderator not found', 'alert alert-danger');
+            redirect('authModerators/manageRequests');
+            return;
+        }
+    
+        if($this->moderatorModel->approveRequest($id, $moderator->ModeratorID)) {
             flash('success_message', 'Request approved successfully');
         } else {
             flash('error_message', 'Failed to approve request', 'alert alert-danger');
@@ -201,7 +210,16 @@ class AuthModerators extends Controller {
     }
     
     public function rejectRequest($id) {
-        if($this->moderatorModel->rejectRequest($id, $_SESSION['moderator_id'])) {
+        // Get moderator ID from user ID
+        $moderator = $this->moderatorModel->getModeratorByUserId($_SESSION['user_id']);
+        
+        if(!$moderator) {
+            flash('error_message', 'Moderator not found', 'alert alert-danger');
+            redirect('authModerators/manageRequests');
+            return;
+        }
+    
+        if($this->moderatorModel->rejectRequest($id, $moderator->ModeratorID)) {
             flash('success_message', 'Request rejected successfully');
         } else {
             flash('error_message', 'Failed to reject request', 'alert alert-danger');

@@ -5,6 +5,12 @@
     <div class="auth-card">
         <h2>Login to Hopefull</h2>
         <p class="auth-subtitle">Welcome back! Please login to your account.</p>
+
+        <?php flash('login_error'); ?>
+
+        <?php if(isset($data['errors']['login'])): ?>
+            <div class="alert alert-danger"><?php echo $data['errors']['login']; ?></div>
+        <?php endif; ?>
         
         <form action="<?php echo URLROOT; ?>/users/login" method="POST" class="auth-form">
           

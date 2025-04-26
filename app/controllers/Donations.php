@@ -280,7 +280,7 @@ class Donations extends Controller {
  * Make a donation to a request
  * @param string $requestId The request ID
  */
-public function donate($requestId = null) {
+/*public function donate($requestId = null) {
     // Check if valid request ID is provided
     if ($requestId === null) {
         flash('donation_error', 'Invalid request', 'alert alert-danger');
@@ -544,6 +544,347 @@ public function donate($requestId = null) {
         } else {
             // Non-monetary donation processing (unchanged)
             // Your existing non-monetary donation logic here
+        }
+        
+        // If we got here, there were errors, display the form again with errors
+        if ($request->RequestType === 'Monetary') {
+            $this->view('donors/monetary-donation-form', $data);
+        } else {
+            $this->view('donors/non-monetary-donation-form', $data);
+        }
+    } else {
+        // Display the donation form (GET request)
+        $data = [
+            'title' => 'Donate to ' . $request->Title,
+            'request' => $request,
+            'amount' => '',
+            'quantity' => '',
+            'payment_method' => '',
+            'notes' => '',
+            'amount_err' => '',
+            'quantity_err' => '',
+            'payment_method_err' => ''
+        ];
+        
+        // Get additional data for the forms
+        if ($request->RequestType == 'NonMonetary') {
+            $data['itemDetails'] = $this->donationRequestModel->getNonMonetaryRequestDetails($requestId);
+        }
+        
+        // Load the appropriate form based on request type
+        if ($request->RequestType === 'Monetary') {
+            $this->view('donors/monetary-donation-form', $data);
+        } else {
+            $this->view('donors/non-monetary-donation-form', $data);
+        }
+    }
+}*/
+public function donate($requestId = null) {
+    // Check if valid request ID is provided
+    if ($requestId === null) {
+        flash('donation_error', 'Invalid request', 'alert alert-danger');
+        redirect('donors/dashboard');
+        return;
+    }
+    
+    // Get request details
+    $request = $this->donationRequestModel->getRequestWithFullDetails($requestId);
+    
+    if (!$request) {
+        flash('donation_error', 'Request not found', 'alert alert-danger');
+        redirect('donors/dashboard');
+        return;
+    }
+    
+    // Check if request is still active
+    if ($request->RequestStatus !== 'Pending' && $request->RequestStatus !== 'InProgress') {
+        flash('donation_error', 'This request is no longer accepting donations', 'alert alert-danger');
+        redirect('donors/dashboard');
+        return;
+    }
+    
+    // Process form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Sanitize POST data
+        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+        
+        // Initialize data array
+        $data = [
+            'title' => 'Donate to ' . $request->Title,
+            'request' => $request,
+            'amount' => trim($_POST['amount'] ?? ''),
+            'quantity' => trim($_POST['quantity'] ?? ''),
+            'payment_method' => trim($_POST['payment_method'] ?? ''),
+            'notes' => trim($_POST['notes'] ?? ''),
+            'amount_err' => '',
+            'quantity_err' => '',
+            'payment_method_err' => ''
+        ];
+        
+        // Get additional data for the forms
+        if ($request->RequestType == 'NonMonetary') {
+            $data['itemDetails'] = $this->donationRequestModel->getNonMonetaryRequestDetails($requestId);
+        }
+        
+        // Validate based on request type
+        if ($request->RequestType === 'Monetary') {
+            // Validate amount
+            if (empty($data['amount'])) {
+                $data['amount_err'] = 'Please enter donation amount';
+            } else if (!is_numeric($data['amount']) || $data['amount'] <= 0) {
+                $data['amount_err'] = 'Amount must be a positive number';
+            }
+            
+            // Validate payment method
+            if (empty($data['payment_method'])) {
+                $data['payment_method_err'] = 'Please select payment method';
+            }
+            
+            // If bank transfer payment method, validate payment slip
+            $bankPaymentUploaded = false;
+            $slipFileName = '';
+            if ($data['payment_method'] == 'bank') {
+                if (!isset($_FILES['bank_slip']) || $_FILES['bank_slip']['error'] != 0) {
+                    $data['payment_method_err'] = 'Please upload your bank transfer slip';
+                } else {
+                    // File validation logic
+                    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+                    $fileType = $_FILES['bank_slip']['type'];
+                    $fileSize = $_FILES['bank_slip']['size'];
+                    $maxSize = 5 * 1024 * 1024; // 5MB max size
+                    
+                    if (!in_array($fileType, $allowedTypes)) {
+                        $data['payment_method_err'] = 'Only JPEG, PNG, GIF images and PDF files are allowed';
+                    } elseif ($fileSize > $maxSize) {
+                        $data['payment_method_err'] = 'File size must be less than 5MB';
+                    } else {
+                        $bankPaymentUploaded = true;
+                    }
+                }
+            }
+            
+            // If no errors, process monetary donation
+            if (empty($data['amount_err']) && empty($data['payment_method_err'])) {
+                // Begin transaction
+                $this->db->beginTransaction();
+                
+                try {
+                    // Create donation record
+                    $donationData = [
+                        'donorId' => $_SESSION['donor_id'],
+                        'requestId' => $requestId,
+                        'donationType' => 'Monetary',
+                        'amount' => $data['amount'],
+                        'quantity' => null,
+                        'isAnonymous' => isset($_POST['anonymous']) ? 1 : 0,
+                        'notes' => $data['notes']
+                    ];
+                    
+                    // PayHere payments should be marked as Pending until confirmed
+                    $initialStatus = ($data['payment_method'] == 'payhere') ? 'Pending' : 'Completed';
+                    
+                    // Generate DonationID (Format: DON + 5 random digits)
+                    $donationId = 'DON' . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+                    
+                    // Insert donation record with appropriate status
+                    $this->db->query('INSERT INTO donations (DonationID, RequestID, DonorID, DonationType, Amount, QuantityDonated, IsAnonymous, Status) 
+                                    VALUES (:donationId, :requestId, :donorId, :donationType, :amount, :quantity, :isAnonymous, :status)');
+                    
+                    $this->db->bind(':donationId', $donationId);
+                    $this->db->bind(':requestId', $donationData['requestId']);
+                    $this->db->bind(':donorId', $donationData['donorId']);
+                    $this->db->bind(':donationType', $donationData['donationType']);
+                    $this->db->bind(':amount', $donationData['amount']);
+                    $this->db->bind(':quantity', $donationData['quantity']);
+                    $this->db->bind(':isAnonymous', $donationData['isAnonymous']);
+                    $this->db->bind(':status', $initialStatus);
+                    
+                    $donationResult = $this->db->execute();
+                    
+                    // Process based on payment method
+                    if ($data['payment_method'] == 'payhere') {
+                        // Create payment record for PayHere
+                        $paymentData = [
+                            'donation_id' => $donationId,
+                            'payment_amount' => $data['amount'],
+                            'payment_method' => 'payhere',
+                            'status' => 'Pending',
+                            'payment_details' => json_encode([
+                                'user_id' => $_SESSION['user_id'],
+                                'donor_id' => $_SESSION['donor_id'],
+                                'request_id' => $data['requestId']
+                            ])
+                        ];
+                        
+                        $paymentId = $this->donationModel->createDonationPaymentRecord($paymentData);
+                        
+                        if (!$paymentId) {
+                            throw new Exception("Failed to create payment record");
+                        }
+                        
+                        // Store the donation ID in session for later use
+                        $_SESSION['payhere_donation_id'] = $donationId;
+                        $_SESSION['payhere_payment_id'] = $paymentId;
+                        
+                        // Commit transaction
+                        $this->db->commit();
+                        
+                        // Redirect to PayHere processing
+                        redirect('donations/processPayHere/' . $donationId);
+                        return;
+                        
+                    } else if ($data['payment_method'] == 'bank') {
+                        // Handle bank slip upload
+                        if ($bankPaymentUploaded) {
+                            // Get file extension
+                            $fileExt = pathinfo($_FILES['bank_slip']['name'], PATHINFO_EXTENSION);
+                            
+                            // Create new filename based on donation ID
+                            $newFileName = $donationId . '.' . $fileExt;
+                            
+                            // Set upload directory
+                            $slipsDir = UPLOADS_PATH . '/donation_slips';
+                            
+                            // Create directory if it doesn't exist
+                            if (!file_exists($slipsDir)) {
+                                mkdir($slipsDir, 0755, true);
+                            }
+                            
+                            // Set file destination
+                            $destination = $slipsDir . '/' . $newFileName;
+                            
+                            // Upload file
+                            if (move_uploaded_file($_FILES['bank_slip']['tmp_name'], $destination)) {
+                                // Create bank payment record
+                                $donationBankPaymentModel = $this->model('DonationBankPayment');
+                                $bankPaymentData = [
+                                    'donation_id' => $donationId,
+                                    'slip_file' => $newFileName
+                                ];
+                                
+                                if (!$donationBankPaymentModel->createBankPayment($bankPaymentData)) {
+                                    throw new Exception("Failed to create bank payment record");
+                                }
+                                
+                                // Set the donation status to Pending
+                                $this->db->query('UPDATE donations SET Status = "Pending" WHERE DonationID = :donationId'); // Ensure $this->db is properly initialized
+                                $this->db->bind(':donationId', $donationId);
+                                $this->db->execute();
+                                
+                            } else {
+                                throw new Exception("Failed to upload bank slip");
+                            }
+                        } else {
+                            throw new Exception("Bank slip upload is required");
+                        }
+                        
+                        // Update request status to InProgress
+                        $this->db->query('UPDATE donation_requests 
+                                         SET RequestStatus = "InProgress" 
+                                         WHERE RequestID = :requestId AND RequestStatus = "Pending"');
+                        $this->db->bind(':requestId', $requestId);
+                        $this->db->execute();
+                        
+                        // Commit transaction
+                        $this->db->commit();
+                        
+                    } else {
+                        // Direct completion for other payment methods
+                        
+                        // Update monetary donation details
+                        $this->db->query('UPDATE monetary_donation_details 
+                                         SET CurrentAmount = CurrentAmount + :amount 
+                                         WHERE RequestID = :requestId');
+                        $this->db->bind(':amount', $data['amount']);
+                        $this->db->bind(':requestId', $requestId);
+                        $updateResult = $this->db->execute();
+                        
+                        // Update donor statistics
+                        $this->db->query('UPDATE donors 
+                                         SET TotalDonations = TotalDonations + :amount, DonationCount = DonationCount + 1 
+                                         WHERE DonorID = :donorId');
+                        $this->db->bind(':amount', $data['amount']);
+                        $this->db->bind(':donorId', $_SESSION['donor_id']);
+                        $donorUpdateResult = $this->db->execute();
+                        
+                        // Check monetary request completion
+                        $this->donationModel->checkMonetaryRequestCompletion($requestId);
+                        
+                        // Commit transaction
+                        $this->db->commit();
+                    }
+                    
+                    // Get the created donation for confirmation page
+                    $donation = $this->donationModel->getDonationById($donationId);
+                    
+                    // Prepare data for confirmation page
+                    $confirmData = [
+                        'donation' => $donation,
+                        'request' => $request,
+                        'payment_method' => $data['payment_method']
+                    ];
+                    
+                    // Go to confirmation page
+                    $this->view('donors/donation-confirmation', $confirmData);
+                    return;
+                    
+                } catch (Exception $e) {
+                    // Roll back transaction on error
+                    $this->db->rollBack();
+                    error_log("Donation Error: " . $e->getMessage());
+                    flash('donation_error', 'Something went wrong. Please try again.', 'alert alert-danger');
+                    
+                    // Re-display the form with error
+                    $this->view('donors/monetary-donation-form', $data);
+                    return;
+                }
+            }
+            
+        } else {
+  // Non-monetary donation validation
+  if (empty($data['quantity'])) {
+    $data['quantity_err'] = 'Please enter donation quantity';
+} else if (!is_numeric($data['quantity']) || $data['quantity'] <= 0 || floor($data['quantity']) != $data['quantity']) {
+    $data['quantity_err'] = 'Quantity must be a positive whole number';
+}
+
+// If no errors, process non-monetary donation
+if (empty($data['quantity_err'])) {
+    // Create donation record
+    $donationData = [
+        'donorId' => $_SESSION['donor_id'],
+        'requestId' => $requestId,
+        'donationType' => 'NonMonetary',
+        'amount' => null,
+        'quantity' => $data['quantity'],
+        'isAnonymous' => isset($_POST['anonymous']) ? 1 : 0,
+        'dropOffDate' => $_POST['dropoff_date'] ?? null,
+        'dropOffTime' => $_POST['dropoff_time'] ?? null,
+        'notes' => $data['notes']
+    ];
+    
+    // Use createNonMonetaryDonation method instead of createDonation
+    $donationId = $this->donationModel->createNonMonetaryDonation($donationData);
+    if ($donationId) {
+        // Get the created donation for confirmation page
+        $donation = $this->donationModel->getDonationById($donationId);
+        $scheduleDetails = $this->donationModel->getNonMonetaryDonationDetails($donationId);
+        
+        // Prepare data for confirmation page
+        $confirmData = [
+            'donation' => $donation,
+            'request' => $request,
+            'itemDetails' => $data['itemDetails'],
+            'scheduleDetails' => $scheduleDetails
+        ];
+        
+        // Go to confirmation page
+        $this->view('donors/donation-confirmation', $confirmData);
+        return;
+    } else {
+        flash('donation_error', 'Something went wrong. Please try again.', 'alert alert-danger');
+    }
+}
         }
         
         // If we got here, there were errors, display the form again with errors
@@ -968,7 +1309,7 @@ public function paymentSuccess($donationId = null) {
                 }
                 
                 // 4. Check if request is complete
-                $this->checkMonetaryRequestCompletion($donation->RequestID);
+                $this->donationModel->checkMonetaryRequestCompletion($donation->RequestID);
             }
         }
         
@@ -1002,7 +1343,7 @@ public function paymentSuccess($donationId = null) {
         
         // Flash success message and redirect to donation confirmation
         flash('donation_message', 'Payment successful! Your donation has been processed.', 'alert alert-success');
-        redirect('donations/donationConfirmation/' . $donationId);
+        redirect('donors/donation-confirmation/' . $donationId);
     } catch (Exception $e) {
         // If any error occurs, roll back the transaction
         $this->db->rollBack();
@@ -1136,7 +1477,7 @@ public function paymentNotify() {
                                 $this->db->execute();
                                 
                                 // 4. Check if the request is complete
-                                $this->checkMonetaryRequestCompletion($donation->RequestID);
+                                $this->donationModel->checkMonetaryRequestCompletion($donation->RequestID);
                             }
                         }
                         
