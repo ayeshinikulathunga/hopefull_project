@@ -5,6 +5,8 @@
     <div class="auth-card">
         <h2>Login to Hopefull</h2>
         <p class="auth-subtitle">Welcome back! Please login to your account.</p>
+
+        <?php flash('login_error'); ?>
         
         <form action="<?php echo URLROOT; ?>/users/login" method="POST" class="auth-form">
           
