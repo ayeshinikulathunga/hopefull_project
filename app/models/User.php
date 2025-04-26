@@ -299,29 +299,40 @@ class User {
             $this->db->bind(':username', $username);
             $this->db->bind(':password', $passwordHash);
             
-            if($this->db->execute()) {
-                // Generate RecipientID
-                $recipientId = 'R' . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
-                
-                // Insert recipient details
-                $this->db->query('INSERT INTO recipients (RecipientID, UserID, FirstName, LastName, ContactNumber, Address, OrganizationType, DocumentationURL) 
-                                 VALUES (:recipientId, :userId, :firstName, :lastName, :contactNumber, :address, :organizationType, :documentationURL)');
-                
-                $this->db->bind(':recipientId', $recipientId);
-                $this->db->bind(':userId', $userId);
-                $this->db->bind(':firstName', $data['firstName']);
-                $this->db->bind(':lastName', $data['lastName']);
-                $this->db->bind(':contactNumber', $data['contactNumber']);
-                $this->db->bind(':address', $data['address']);
-                $this->db->bind(':organizationType', $data['organizationType']);
-                $this->db->bind(':documentationURL', $data['documentationURL']);
-                
-                return $this->db->execute();
+            if(!$this->db->execute()) {
+                throw new Exception('Failed to create user account');
             }
-            return false;
+    
+            // Generate RecipientID
+            $recipientId = 'R' . str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
             
-        } catch(PDOException $e) {
-            error_log("Registration Error: " . $e->getMessage());
+            // Insert recipient details with Pending verification status
+            $this->db->query('INSERT INTO recipients 
+                             (RecipientID, UserID, FirstName, LastName, ContactNumber, 
+                              Address, OrganizationType, DocumentationURL, VerificationStatus) 
+                             VALUES 
+                             (:recipientId, :userId, :firstName, :lastName, :contactNumber, 
+                              :address, :organizationType, :documentationURL, "Pending")');
+            
+            $this->db->bind(':recipientId', $recipientId);
+            $this->db->bind(':userId', $userId);
+            $this->db->bind(':firstName', $data['firstName']);
+            $this->db->bind(':lastName', $data['lastName']);
+            $this->db->bind(':contactNumber', $data['contactNumber']);
+            $this->db->bind(':address', $data['address']);
+            $this->db->bind(':organizationType', $data['organizationType']);
+            $this->db->bind(':documentationURL', $data['documentationURL']);
+    
+            $result = $this->db->execute();
+            
+            if($result) {
+                return true;
+            } else {
+                throw new Exception('Failed to create recipient profile');
+            }
+            
+        } catch(Exception $e) {
+            error_log('Recipient registration error: ' . $e->getMessage());
             return false;
         }
     }
@@ -460,6 +471,24 @@ public function updatePassword($userId, $newPassword) {
     $this->db->bind(':userId', $userId);
     
     return $this->db->execute();
+}
+
+public function hasPendingRecipientRequest($userId) {
+    $this->db->query('SELECT r.VerificationStatus 
+                     FROM recipients r 
+                     WHERE r.UserID = :userId');
+    $this->db->bind(':userId', $userId);
+    $result = $this->db->single();
+    
+    return ($result && $result->VerificationStatus === 'Pending');
+}
+
+public function getRecipientVerificationStatus($userId) {
+    $this->db->query('SELECT VerificationStatus FROM recipients WHERE UserID = :userId');
+    $this->db->bind(':userId', $userId);
+    $result = $this->db->single();
+    
+    return $result ? $result->VerificationStatus : null;
 }
 
 /**

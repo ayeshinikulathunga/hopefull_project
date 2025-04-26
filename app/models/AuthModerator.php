@@ -79,7 +79,7 @@ class AuthModerator {
 
     public function getRequestStats() {
         $this->db->query('SELECT 
-                        (SELECT COUNT(*) FROM donation_requests WHERE RequestStatus = "Pending") as pendingRequests,
+                        (SELECT COUNT(*) FROM donation_requests WHERE VerificationStatus = "Pending") as pendingRequests,
                         (SELECT COUNT(*) FROM donation_requests WHERE RequestStatus = "InProgress") as inProgressRequests,
                         (SELECT COUNT(*) FROM donation_requests WHERE RequestStatus = "Completed") as completedRequests,
                         (SELECT COUNT(*) FROM donation_requests WHERE RequestStatus = "Expired") as expiredRequests');
@@ -160,13 +160,6 @@ class AuthModerator {
         }
         
         return false;
-    }
-
-    public function updateRequestStatus($requestID, $newStatus) {
-        $this->db->query("UPDATE donation_requests SET RequestStatus = :status WHERE RequestID = :id");
-        $this->db->bind(':status', $newStatus);
-        $this->db->bind(':id', $requestID);
-        return $this->db->execute();
     }
     
 }
