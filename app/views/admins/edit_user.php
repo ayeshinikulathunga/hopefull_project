@@ -35,7 +35,7 @@
             <label>User Status</label>
             <select name="user_status" class="form-control">
                 <option value="Active" <?php echo $data['user']->UserStatus == 'Active' ? 'selected' : ''; ?>>Active</option>
-                <option value="Inactive" <?php echo $data['user']->UserStatus == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
+                <option value="Banned" <?php echo $data['user']->UserStatus == 'Banned' ? 'selected' : ''; ?>>Banned</option>
             </select>
         </div>
 

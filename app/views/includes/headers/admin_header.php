@@ -54,7 +54,7 @@
             </nav>
         </aside>
 
-        <!-- Main Content Area -->
+
         <main class="admin-main">
             <header class="admin-header">
                 <div class="header-left">
@@ -62,10 +62,7 @@
                 </div>
                 
                 <div class="header-right">
-                    <div class="search-bar">
-                        <input type="text" placeholder="Search...">
-                        <i class="fas fa-search"></i>
-                    </div>
+                    
                     
                     <div class="notification-icon">
                         <i class="fas fa-bell"></i>
