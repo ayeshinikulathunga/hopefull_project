@@ -39,9 +39,6 @@
                 <a href="<?php echo URLROOT; ?>/donations/pendingDonations" class="sidebar-menu-item">
                     <i class="fas fa-heart"></i> Pending Donations
                 </a>
-                <a href="<?php echo URLROOT; ?>/donors/events" class="sidebar-menu-item">
-                    <i class="fas fa-calendar-alt"></i> Events
-                </a>
                
                 </a>
                 <a href="<?php echo URLROOT; ?>/donors/feedback" class="sidebar-menu-item">
