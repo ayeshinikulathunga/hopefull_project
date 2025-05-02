@@ -1,4 +1,4 @@
-HopeFull is a purpose-driven web application designed to facilitate donations, volunteering, and community empowerment. It connects donors, volunteers, and recipients through a centralized, transparent, and engaging platform. 
+HopeFull is a purpose-driven web application designed to facilitate donations and community empowerment. It connects donors and recipients through a centralized, transparent, and engaging platform. 
 Additionally, it supports differently abled individuals by providing a dedicated marketplace for selling their goods and gaining financial independence.
 
 Features :
