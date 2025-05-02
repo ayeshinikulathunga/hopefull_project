@@ -1,13 +1,12 @@
-HOPEFULL
 HopeFull is a purpose-driven web application designed to facilitate donations, volunteering, and community empowerment. It connects donors, volunteers, and recipients through a centralized, transparent, and engaging platform. 
 Additionally, it supports differently abled individuals by providing a dedicated marketplace for selling their goods and gaining financial independence.
 
 Features :
-Monetary & Non-monetary Donations: Users can make donations in various forms
-HopeFull Marketplace: A platform for differently abled individuals to sell crafts, artwork, and more
-Gamification: Badges, leaderboards, and interactive features to increase user engagement
-Inventory & Logistics Management: Efficient handling of donations and distribution
-Transparency & Security: Verified recipients and detailed transaction records
+  Monetary & Non-monetary Donations: Users can make donations in various forms
+  HopeFull Marketplace: A platform for differently abled individuals to sell crafts, artwork, and more
+  Gamification: Badges, leaderboards, and interactive features to increase user engagement
+  Inventory & Logistics Management: Efficient handling of donations and distribution
+  Transparency & Security: Verified recipients and detailed transaction records
 
 Target Users :
 Donors (individuals or organizations)
