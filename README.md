@@ -24,5 +24,5 @@ Apache HTTP Server,
 Git & GitHub for version control,
 Online payment gateway for transactions
 
-License
+License:
 This project is developed for academic purposes and is not licensed for commercial use.
